@@ -1,0 +1,30 @@
+#######################################
+# Syntax Coloring Map For Matrix
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Train	KEYWORD1
+Track	KEYWORD1
+Controller	KEYWORD1
+Decoder	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+debug_packet	KEYWORD2
+debug_wave	KEYWORD2
+add_decoder	KEYWORD2
+add_track	KEYWORD2
+set_trigger	KEYWORD2
+first_track	KEYWORD2
+first_decoder	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+DCC	LITERAL1
