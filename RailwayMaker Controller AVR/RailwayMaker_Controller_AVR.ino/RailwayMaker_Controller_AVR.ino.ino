@@ -16,7 +16,12 @@
  *
  */
 #include <SPI.h>
-#include <SD.h>
+#include <SdFat.h>
+
+SdFat sd;
+#define SD_SELECT 8
+
+#include <IniFile.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <IRremote.h>
@@ -25,9 +30,7 @@
 #include <Adafruit_PWMServoDriver.h>
 
 
-// set up variables using the SD utility library functions:
-File config_file;
-const int chipSelect = 8; 
+
 
 #define PIN 4 // NEOPIXEL Pin num
 // Parameter 1 = number of pixels in strip
@@ -66,14 +69,14 @@ typedef struct
     //int             address;                // DCC Address to respond to 0=n/a
     byte              type;                   // Type 1=toggle, 0=button/input
     byte              defaultState;           // Default state of pin 1=on, 0=off
-    int               outputMuxPin;           // Mux output pin to drive        
-    int               outputArduinoPin;       // Arduino output pin to drive (digital)
+    //int               outputMuxPin;           // Mux output pin to drive        
+    //int               outputArduinoPin;       // Arduino output pin to drive (digital)
     int               servoToToggle;          // PWM Servo to toggle to on/off position
-    boolean           isFlasher;              // true=flash output, false=no time, no flash.
+    //boolean           isFlasher;              // true=flash output, false=no time, no flash.
     //int               durationMilli;          // Milliseconds to leave output on for.  0 means don't auto off
     
-    int     onMilli;                // Used internally for timing if flasher
-    int     offMilli;               // 
+    //int     onMilli;                // Used internally for timing if flasher
+    //int     offMilli;               // 
 } muxIO;
 muxIO muxIOConfig[32];
 
@@ -87,17 +90,150 @@ typedef struct
     boolean           isConstantSweep;        // Allows the servo to constantly sweep back and forth rather than toggle
     
 } servoPWM;
-servoPWM servoConfig[32]; 
+//servoPWM servoConfig[32]; 
+
+void printErrorMessage(uint8_t e, bool eol = true)
+{
+  /*
+  switch (e) {
+  case IniFile::errorNoError:
+    Serial.print("no error");
+    break;
+  case IniFile::errorFileNotFound:
+    Serial.print("file not found");
+    break;
+  case IniFile::errorFileNotOpen:
+    Serial.print("file not open");
+    break;
+  case IniFile::errorBufferTooSmall:
+    Serial.print("buffer too small");
+    break;
+  case IniFile::errorSeekError:
+    Serial.print("seek error");
+    break;
+  case IniFile::errorSectionNotFound:
+    Serial.print("section not found");
+    break;
+  case IniFile::errorKeyNotFound:
+    Serial.print("key not found");
+    break;
+  case IniFile::errorEndOfFile:
+    Serial.print("end of file");
+    break;
+  case IniFile::errorUnknownError:
+    Serial.print("unknown error");
+    break;
+  default:
+    Serial.print("unknown error value");
+    break;
+  }
+  if (eol)
+    Serial.println();
+  */
+}
 
 void setup() {
   
   
   Serial.begin(9600);
   
+  Serial.println("Type any character to start");
+  while (Serial.read() <= 0) {}
+  
   Wire.begin();
   
-  // SD pin 10 must be set as output
-  pinMode(10, OUTPUT);     
+  // Configure all of the SPI select pins as outputs and make SPI
+  // devices inactive, otherwise the earlier init routines may fail
+  // for devices which have not yet been configured.
+  pinMode(SD_SELECT, OUTPUT);
+  digitalWrite(SD_SELECT, HIGH); // disable SD card
+  
+
+  const size_t bufferLen = 80;
+  char buffer[bufferLen];
+
+  const char *filename = "/config.txt";
+  Serial.begin(9600);
+  SPI.begin();
+  if (!sd.begin(SD_SELECT))
+    while (1)
+      Serial.println("SD failed");
+  
+  IniFile ini(filename);
+  if (!ini.open()) {
+    Serial.print("config missing");
+    // Cannot do anything else
+    while (1)
+      ;
+  }
+
+  // Check the file is valid. This can be used to warn if any lines
+  // are longer than the buffer.
+  if (!ini.validate(buffer, bufferLen)) {
+    Serial.print(" not valid: ");
+    printErrorMessage(ini.getError());
+    // Cannot do anything else
+    while (1)
+      ;
+  }
+  
+  bool blnVal; 
+  bool found;
+  int m = 0; // mux to 32
+  String setting;
+  char buf[30];
+  
+  for(int y=0; y<2; y++) 
+  {
+    for(int x=0; x<16; x++) 
+    {
+
+      // Look for type_
+      setting = "type_";
+      setting += m;
+      buf[30];                                  // an array of chars to put the string into.   
+      setting.toCharArray(buf, 30);
+      
+      //Serial.println(setting);
+
+      found = ini.getValue("mux", buf, buffer, bufferLen, blnVal);
+      if (found)
+      {
+        muxIOConfig[x*y].type = found;
+        Serial.print(setting);
+        Serial.println("found");
+      }
+      else
+      {
+        Serial.print(setting);
+        Serial.println("not found");
+      }
+
+      //look for defaultstate_
+      /*
+      setting = "defaultstate_";
+      setting += m;
+      buf[30];                                  // an array of chars to put the string into.   
+      setting.toCharArray(buf, 30);
+      
+      //Serial.println(setting);
+
+      found = ini.getValue("mux", buf, buffer, bufferLen, blnVal);
+      if (found)
+      {
+        muxIOConfig[x*y].type = found;
+        Serial.print(setting);
+        Serial.println("found");
+      }
+      else
+      {
+        Serial.print(setting);
+        Serial.println("not found");
+      }
+      */
+      m=m+1;
+    }
+  }
   
   // Neopixels
   strip.begin();
@@ -122,30 +258,6 @@ void setup() {
   
   // DEBUG
   scanI2C();
- 
-  if (!SD.begin(chipSelect)) {
-    Serial.println("sd failed");
-    return;
-  }
-  
-  delay(200);
-  lcd.clear();
-  
-  // open the config file for reading:
-  config_file = SD.open("config.txt");
-  if (config_file) {
-    // read from the file until there's nothing else in it:
-    while (config_file.available()) {
-      String config_line = String(config_file.read());
-      String id = config_line.substring(config_line.lastIndexOf('_'), config_line.lastIndexOf('='));
-      String val = config_line.substring(config_line.lastIndexOf('='));
-    }
-    // close the file:
-    config_file.close();
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("config.txt err");
-  }
 
   delay(200);
   lcd.clear();
@@ -245,7 +357,7 @@ void setMux()
           else
             mcp[y].digitalWrite(0, HIGH);
       }
-      m=m++;
+      m=m+1;
     }
   }
 }
@@ -488,4 +600,6 @@ void scanI2C()
 
   //delay(500);           // wait 5 seconds for next scan
 }
+
+
 
