@@ -67,8 +67,8 @@ int ir_train = 3;
 typedef struct
 {
     //int             address;                // DCC Address to respond to 0=n/a
-    byte              type;                   // Type 1=toggle, 0=button/input
-    byte              defaultState;           // Default state of pin 1=on, 0=off
+    bool              type;                   // Type 1=toggle, 0=button/input
+    bool              defaultState;           // Default state of pin 1=on, 0=off
     //int               outputMuxPin;           // Mux output pin to drive        
     //int               outputArduinoPin;       // Arduino output pin to drive (digital)
     int               servoToToggle;          // PWM Servo to toggle to on/off position
@@ -92,46 +92,6 @@ typedef struct
 } servoPWM;
 //servoPWM servoConfig[32]; 
 
-void printErrorMessage(uint8_t e, bool eol = true)
-{
-  /*
-  switch (e) {
-  case IniFile::errorNoError:
-    Serial.print("no error");
-    break;
-  case IniFile::errorFileNotFound:
-    Serial.print("file not found");
-    break;
-  case IniFile::errorFileNotOpen:
-    Serial.print("file not open");
-    break;
-  case IniFile::errorBufferTooSmall:
-    Serial.print("buffer too small");
-    break;
-  case IniFile::errorSeekError:
-    Serial.print("seek error");
-    break;
-  case IniFile::errorSectionNotFound:
-    Serial.print("section not found");
-    break;
-  case IniFile::errorKeyNotFound:
-    Serial.print("key not found");
-    break;
-  case IniFile::errorEndOfFile:
-    Serial.print("end of file");
-    break;
-  case IniFile::errorUnknownError:
-    Serial.print("unknown error");
-    break;
-  default:
-    Serial.print("unknown error value");
-    break;
-  }
-  if (eol)
-    Serial.println();
-  */
-}
-
 void setup() {
   
   
@@ -141,6 +101,7 @@ void setup() {
   while (Serial.read() <= 0) {}
   
   Wire.begin();
+  delay(100);
   
   // Configure all of the SPI select pins as outputs and make SPI
   // devices inactive, otherwise the earlier init routines may fail
@@ -148,7 +109,13 @@ void setup() {
   pinMode(SD_SELECT, OUTPUT);
   digitalWrite(SD_SELECT, HIGH); // disable SD card
   
+  // LCD
+  //lcd.begin(16,2);   // initialize the lcd for 16 chars 2 lines, turn on backlight
+  lcd.begin(20,4);         // initialize the lcd for 20 chars 4 lines, turn on backlight  
+  lcd.clear();
+  lcd.backlight(); // finish with backlight on  
 
+  // CONFIG
   const size_t bufferLen = 80;
   char buffer[bufferLen];
 
@@ -171,15 +138,15 @@ void setup() {
   // are longer than the buffer.
   if (!ini.validate(buffer, bufferLen)) {
     Serial.print(" not valid: ");
-    printErrorMessage(ini.getError());
+    //printErrorMessage(ini.getError());
     // Cannot do anything else
-    while (1)
-      ;
+    //while (1)
+    //  ;
   }
   
   bool blnVal; 
   bool found;
-  int m = 0; // mux to 32
+  int m = 1; // mux to 32
   String setting;
   char buf[30];
   
@@ -187,53 +154,56 @@ void setup() {
   {
     for(int x=0; x<16; x++) 
     {
-
-      // Look for type_
-      setting = "type_";
-      setting += m;
-      buf[30];                                  // an array of chars to put the string into.   
-      setting.toCharArray(buf, 30);
+      memcpy(buf, "type_", 5);
+      itoa(m, &buf[5], 10);      
       
-      //Serial.println(setting);
+      blnVal = false;
+      found = false;
+      Serial.print(buf);
+      lcd.setCursor(0, 1);
+      lcd.print(buf);
 
       found = ini.getValue("mux", buf, buffer, bufferLen, blnVal);
       if (found)
       {
-        muxIOConfig[x*y].type = found;
-        Serial.print(setting);
-        Serial.println("found");
-      }
-      else
-      {
-        Serial.print(setting);
-        Serial.println("not found");
+        muxIOConfig[m].type = blnVal;
+        Serial.print("=");
+        Serial.println(blnVal);
+        lcd.setCursor(0, 2);
+        lcd.print(blnVal);
       }
 
-      //look for defaultstate_
-      /*
-      setting = "defaultstate_";
-      setting += m;
-      buf[30];                                  // an array of chars to put the string into.   
-      setting.toCharArray(buf, 30);
+
       
-      //Serial.println(setting);
+      //look for defaultState_
+      memcpy(buf, "state_", 6);
+      itoa(m, &buf[6], 10);      
+      
+      blnVal = false;
+      found = false;
+      Serial.print(buf);
+      lcd.setCursor(0, 1);
+      lcd.print(buf);
 
       found = ini.getValue("mux", buf, buffer, bufferLen, blnVal);
       if (found)
       {
-        muxIOConfig[x*y].type = found;
-        Serial.print(setting);
-        Serial.println("found");
+        muxIOConfig[m].defaultState = blnVal;
+        Serial.print("=");
+        Serial.println(blnVal);
+        lcd.setCursor(0, 2);
+        lcd.print(blnVal);
       }
-      else
-      {
-        Serial.print(setting);
-        Serial.println("not found");
-      }
-      */
+
+
+      
       m=m+1;
     }
   }
+  
+  Serial.print("???=");
+  Serial.println(muxIOConfig[19].defaultState);
+  Serial.println(muxIOConfig[19].defaultState ? "y" : "n");
   
   // Neopixels
   strip.begin();
@@ -241,21 +211,7 @@ void setup() {
 
   // IR
   irrecv.enableIRIn(); // Start the receiver
-  
-  // LCD
-  //lcd.begin(16,2);   // initialize the lcd for 16 chars 2 lines, turn on backlight
-  lcd.begin(20,4);         // initialize the lcd for 20 chars 4 lines, turn on backlight
-
-// ------- Quick 3 blinks of backlight  -------------
-  for(int i = 0; i< 2; i++)
-  {
-    lcd.backlight();
-    delay(250);
-    lcd.noBacklight();
-    delay(250);
-  }
-  lcd.backlight(); // finish with backlight on  
-  
+    
   // DEBUG
   scanI2C();
 
@@ -338,24 +294,28 @@ void loop() {
 
 void setMux()
 {
-  int m = 0; // mux to 32
+  int m = 1; // mux to 32
   for(int y=0; y<2; y++) 
   {
     mcp[y] = Adafruit_MCP23017();
     mcp[y].begin(y ? 3 : 7);
     for(int x=0; x<16; x++) 
     {
-      if(muxIOConfig[x*y].type == 0)
+      if(muxIOConfig[m].type)
       {
         mcp[y].pinMode(x, INPUT);
         mcp[y].pullUp(x, HIGH);
       }
       else
       {
-          if(muxIOConfig[x*y].defaultState == 0)
-            mcp[y].digitalWrite(0, LOW);
+          if(muxIOConfig[m].defaultState)
+          {
+            mcp[y].digitalWrite(x, HIGH);
+          }
           else
-            mcp[y].digitalWrite(0, HIGH);
+          {
+            mcp[y].digitalWrite(x, LOW);
+          }
       }
       m=m+1;
     }

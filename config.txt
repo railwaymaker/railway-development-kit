@@ -1,681 +1,365 @@
+[config]
 #Number of WS2812 lights
-ws2812_count=5
+ws2812_count = 5
 
 [mux]
-#DCC Address to respond to 0=n/a
-address_1=
-#Type 1=toggle, 0=button/input
-type_1=0
-#Default state of pin 1=on, 0=off 
-defaultState_1=0
-#Mux output pin to drive      
-outputMuxPin_1=
+#DCC Address to respond to 0 = n/a
+address_1 = 
+#Type 1 = toggle, 0 = button/input
+type_1 = 0
+#Default state of pin 1 = on, 0 = off 
+state_1 = 0
+#Mux output pin to drive  
+outputMuxPin_1 = 
 #Arduino output pin to drive (digital)
-outputArduinoPin_1=
+outputArduinoPin_1 = 
 #PWM Servo to toggle to on/off position
-servoToToggle_1=
-#true=flash output, false=no time, no flash.
-isFlasher_1=
+servoToToggle_1 = 
+#true = flash output, false = no time, no flash.
+isFlasher_1 = 
 #Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_1=
+durationMilli_1 = 
 #Used internally for timing if flasher
-onMilli_1=
-offMilli_1=
-
-
-#DCC Address to respond to 0=n/a
-address_2=
-#Type 1=toggle, 0=button/input
-type_2=0
-#Default state of pin 1=on, 0=off 
-defaultState_2=0
-#Mux output pin to drive      
-outputMuxPin_2=
-#Arduino output pin to drive (digital)
-outputArduinoPin_2=
-#PWM Servo to toggle to on/off position
-servoToToggle_2=
-#true=flash output, false=no time, no flash.
-isFlasher_2=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_2=
-#Used internally for timing if flasher
-onMilli_2=
-offMilli_2=
-
-
-#DCC Address to respond to 0=n/a
-address_3=
-#Type 1=toggle, 0=button/input
-type_3=0
-#Default state of pin 1=on, 0=off 
-defaultState_3=0
-#Mux output pin to drive      
-outputMuxPin_3=
-#Arduino output pin to drive (digital)
-outputArduinoPin_3=
-#PWM Servo to toggle to on/off position
-servoToToggle_3=
-#true=flash output, false=no time, no flash.
-isFlasher_3=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_3=
-#Used internally for timing if flasher
-onMilli_3=
-offMilli_3=
-
-
-#DCC Address to respond to 0=n/a
-address_4=
-#Type 1=toggle, 0=button/input
-type_4=0
-#Default state of pin 1=on, 0=off 
-defaultState_4=0
-#Mux output pin to drive      
-outputMuxPin_4=
-#Arduino output pin to drive (digital)
-outputArduinoPin_4=
-#PWM Servo to toggle to on/off position
-servoToToggle_4=
-#true=flash output, false=no time, no flash.
-isFlasher_4=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_4=
-#Used internally for timing if flasher
-onMilli_4=
-offMilli_4=
-
-
-#DCC Address to respond to 0=n/a
-address_5=
-#Type 1=toggle, 0=button/input
-type_5=0
-#Default state of pin 1=on, 0=off 
-defaultState_5=0
-#Mux output pin to drive      
-outputMuxPin_5=
-#Arduino output pin to drive (digital)
-outputArduinoPin_5=
-#PWM Servo to toggle to on/off position
-servoToToggle_5=
-#true=flash output, false=no time, no flash.
-isFlasher_5=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_5=
-#Used internally for timing if flasher
-onMilli_5=
-offMilli_5=
-
-
-#DCC Address to respond to 0=n/a
-address_6=
-#Type 1=toggle, 0=button/input
-type_6=0
-#Default state of pin 1=on, 0=off 
-defaultState_6=0
-#Mux output pin to drive      
-outputMuxPin_6=
-#Arduino output pin to drive (digital)
-outputArduinoPin_6=
-#PWM Servo to toggle to on/off position
-servoToToggle_6=
-#true=flash output, false=no time, no flash.
-isFlasher_6=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_6=
-#Used internally for timing if flasher
-onMilli_6=
-offMilli_6=
-
-
-#DCC Address to respond to 0=n/a
-address_7=
-#Type 1=toggle, 0=button/input
-type_7=0
-#Default state of pin 1=on, 0=off 
-defaultState_7=0
-#Mux output pin to drive      
-outputMuxPin_7=
-#Arduino output pin to drive (digital)
-outputArduinoPin_7=
-#PWM Servo to toggle to on/off position
-servoToToggle_7=
-#true=flash output, false=no time, no flash.
-isFlasher_7=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_7=
-#Used internally for timing if flasher
-onMilli_7=
-offMilli_7=
-
-
-#DCC Address to respond to 0=n/a
-address_8=
-#Type 1=toggle, 0=button/input
-type_8=0
-#Default state of pin 1=on, 0=off 
-defaultState_8=0
-#Mux output pin to drive      
-outputMuxPin_8=
-#Arduino output pin to drive (digital)
-outputArduinoPin_8=
-#PWM Servo to toggle to on/off position
-servoToToggle_8=
-#true=flash output, false=no time, no flash.
-isFlasher_8=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_8=
-#Used internally for timing if flasher
-onMilli_8=
-offMilli_8=
-
-
-#DCC Address to respond to 0=n/a
-address_9=
-#Type 1=toggle, 0=button/input
-type_9=0
-#Default state of pin 1=on, 0=off 
-defaultState_9=0
-#Mux output pin to drive      
-outputMuxPin_9=
-#Arduino output pin to drive (digital)
-outputArduinoPin_9=
-#PWM Servo to toggle to on/off position
-servoToToggle_9=
-#true=flash output, false=no time, no flash.
-isFlasher_9=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_9=
-#Used internally for timing if flasher
-onMilli_9=
-offMilli_9=
-
-
-#DCC Address to respond to 0=n/a
-address_10=
-#Type 1=toggle, 0=button/input
-type_10=0
-#Default state of pin 1=on, 0=off 
-defaultState_10=0
-#Mux output pin to drive      
-outputMuxPin_10=
-#Arduino output pin to drive (digital)
-outputArduinoPin_10=
-#PWM Servo to toggle to on/off position
-servoToToggle_10=
-#true=flash output, false=no time, no flash.
-isFlasher_10=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_10=
-#Used internally for timing if flasher
-onMilli_10=
-offMilli_10=
-
-
-#DCC Address to respond to 0=n/a
-address_11=
-#Type 1=toggle, 0=button/input
-type_11=0
-#Default state of pin 1=on, 0=off 
-defaultState_11=0
-#Mux output pin to drive      
-outputMuxPin_11=
-#Arduino output pin to drive (digital)
-outputArduinoPin_11=
-#PWM Servo to toggle to on/off position
-servoToToggle_11=
-#true=flash output, false=no time, no flash.
-isFlasher_11=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_11=
-#Used internally for timing if flasher
-onMilli_11=
-offMilli_11=
-
-
-#DCC Address to respond to 0=n/a
-address_12=
-#Type 1=toggle, 0=button/input
-type_12=0
-#Default state of pin 1=on, 0=off 
-defaultState_12=0
-#Mux output pin to drive      
-outputMuxPin_12=
-#Arduino output pin to drive (digital)
-outputArduinoPin_12=
-#PWM Servo to toggle to on/off position
-servoToToggle_12=
-#true=flash output, false=no time, no flash.
-isFlasher_12=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_12=
-#Used internally for timing if flasher
-onMilli_12=
-offMilli_12=
-
-
-#DCC Address to respond to 0=n/a
-address_13=
-#Type 1=toggle, 0=button/input
-type_13=0
-#Default state of pin 1=on, 0=off 
-defaultState_13=0
-#Mux output pin to drive      
-outputMuxPin_13=
-#Arduino output pin to drive (digital)
-outputArduinoPin_13=
-#PWM Servo to toggle to on/off position
-servoToToggle_13=
-#true=flash output, false=no time, no flash.
-isFlasher_13=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_13=
-#Used internally for timing if flasher
-onMilli_13=
-offMilli_13=
-
-
-#DCC Address to respond to 0=n/a
-address_14=
-#Type 1=toggle, 0=button/input
-type_14=0
-#Default state of pin 1=on, 0=off 
-defaultState_14=0
-#Mux output pin to drive      
-outputMuxPin_14=
-#Arduino output pin to drive (digital)
-outputArduinoPin_14=
-#PWM Servo to toggle to on/off position
-servoToToggle_14=
-#true=flash output, false=no time, no flash.
-isFlasher_14=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_14=
-#Used internally for timing if flasher
-onMilli_14=
-offMilli_14=
-
-
-#DCC Address to respond to 0=n/a
-address_15=
-#Type 1=toggle, 0=button/input
-type_15=0
-#Default state of pin 1=on, 0=off 
-defaultState_15=0
-#Mux output pin to drive      
-outputMuxPin_15=
-#Arduino output pin to drive (digital)
-outputArduinoPin_15=
-#PWM Servo to toggle to on/off position
-servoToToggle_15=
-#true=flash output, false=no time, no flash.
-isFlasher_15=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_15=
-#Used internally for timing if flasher
-onMilli_15=
-offMilli_15=
-
-
-#DCC Address to respond to 0=n/a
-address_16=
-#Type 1=toggle, 0=button/input
-type_16=0
-#Default state of pin 1=on, 0=off 
-defaultState_16=0
-#Mux output pin to drive      
-outputMuxPin_16=
-#Arduino output pin to drive (digital)
-outputArduinoPin_16=
-#PWM Servo to toggle to on/off position
-servoToToggle_16=
-#true=flash output, false=no time, no flash.
-isFlasher_16=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_16=
-#Used internally for timing if flasher
-onMilli_16=
-offMilli_16=
-
-
-#DCC Address to respond to 0=n/a
-address_17=
-#Type 1=toggle, 0=button/input
-type_17=0
-#Default state of pin 1=on, 0=off 
-defaultState_17=0
-#Mux output pin to drive      
-outputMuxPin_17=
-#Arduino output pin to drive (digital)
-outputArduinoPin_17=
-#PWM Servo to toggle to on/off position
-servoToToggle_17=
-#true=flash output, false=no time, no flash.
-isFlasher_17=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_17=
-#Used internally for timing if flasher
-onMilli_17=
-offMilli_17=
-
-
-#DCC Address to respond to 0=n/a
-address_18=
-#Type 1=toggle, 0=button/input
-type_18=0
-#Default state of pin 1=on, 0=off 
-defaultState_18=0
-#Mux output pin to drive      
-outputMuxPin_18=
-#Arduino output pin to drive (digital)
-outputArduinoPin_18=
-#PWM Servo to toggle to on/off position
-servoToToggle_18=
-#true=flash output, false=no time, no flash.
-isFlasher_18=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_18=
-#Used internally for timing if flasher
-onMilli_18=
-offMilli_18=
-
-
-#DCC Address to respond to 0=n/a
-address_19=
-#Type 1=toggle, 0=button/input
-type_19=0
-#Default state of pin 1=on, 0=off 
-defaultState_19=0
-#Mux output pin to drive      
-outputMuxPin_19=
-#Arduino output pin to drive (digital)
-outputArduinoPin_19=
-#PWM Servo to toggle to on/off position
-servoToToggle_19=
-#true=flash output, false=no time, no flash.
-isFlasher_19=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_19=
-#Used internally for timing if flasher
-onMilli_19=
-offMilli_19=
-
-
-#DCC Address to respond to 0=n/a
-address_20=
-#Type 1=toggle, 0=button/input
-type_20=0
-#Default state of pin 1=on, 0=off 
-defaultState_20=0
-#Mux output pin to drive      
-outputMuxPin_20=
-#Arduino output pin to drive (digital)
-outputArduinoPin_20=
-#PWM Servo to toggle to on/off position
-servoToToggle_20=
-#true=flash output, false=no time, no flash.
-isFlasher_20=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_20=
-#Used internally for timing if flasher
-onMilli_20=
-offMilli_20=
-
-
-#DCC Address to respond to 0=n/a
-address_21=
-#Type 1=toggle, 0=button/input
-type_21=0
-#Default state of pin 1=on, 0=off 
-defaultState_21=0
-#Mux output pin to drive      
-outputMuxPin_21=
-#Arduino output pin to drive (digital)
-outputArduinoPin_21=
-#PWM Servo to toggle to on/off position
-servoToToggle_21=
-#true=flash output, false=no time, no flash.
-isFlasher_21=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_21=
-#Used internally for timing if flasher
-onMilli_21=
-offMilli_21=
-
-
-#DCC Address to respond to 0=n/a
-address_22=
-#Type 1=toggle, 0=button/input
-type_22=0
-#Default state of pin 1=on, 0=off 
-defaultState_22=0
-#Mux output pin to drive      
-outputMuxPin_22=
-#Arduino output pin to drive (digital)
-outputArduinoPin_22=
-#PWM Servo to toggle to on/off position
-servoToToggle_22=
-#true=flash output, false=no time, no flash.
-isFlasher_22=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_22=
-#Used internally for timing if flasher
-onMilli_22=
-offMilli_22=
-
-
-#DCC Address to respond to 0=n/a
-address_23=
-#Type 1=toggle, 0=button/input
-type_23=0
-#Default state of pin 1=on, 0=off 
-defaultState_23=0
-#Mux output pin to drive      
-outputMuxPin_23=
-#Arduino output pin to drive (digital)
-outputArduinoPin_23=
-#PWM Servo to toggle to on/off position
-servoToToggle_23=
-#true=flash output, false=no time, no flash.
-isFlasher_23=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_23=
-#Used internally for timing if flasher
-onMilli_23=
-offMilli_23=
-
-
-#DCC Address to respond to 0=n/a
-address_24=
-#Type 1=toggle, 0=button/input
-type_24=0
-#Default state of pin 1=on, 0=off 
-defaultState_24=0
-#Mux output pin to drive      
-outputMuxPin_24=
-#Arduino output pin to drive (digital)
-outputArduinoPin_24=
-#PWM Servo to toggle to on/off position
-servoToToggle_24=
-#true=flash output, false=no time, no flash.
-isFlasher_24=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_24=
-#Used internally for timing if flasher
-onMilli_24=
-offMilli_24=
-
-
-#DCC Address to respond to 0=n/a
-address_25=
-#Type 1=toggle, 0=button/input
-type_25=0
-#Default state of pin 1=on, 0=off 
-defaultState_25=0
-#Mux output pin to drive      
-outputMuxPin_25=
-#Arduino output pin to drive (digital)
-outputArduinoPin_25=
-#PWM Servo to toggle to on/off position
-servoToToggle_25=
-#true=flash output, false=no time, no flash.
-isFlasher_25=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_25=
-#Used internally for timing if flasher
-onMilli_25=
-offMilli_25=
-
-
-#DCC Address to respond to 0=n/a
-address_26=
-#Type 1=toggle, 0=button/input
-type_26=0
-#Default state of pin 1=on, 0=off 
-defaultState_26=0
-#Mux output pin to drive      
-outputMuxPin_26=
-#Arduino output pin to drive (digital)
-outputArduinoPin_26=
-#PWM Servo to toggle to on/off position
-servoToToggle_26=
-#true=flash output, false=no time, no flash.
-isFlasher_26=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_26=
-#Used internally for timing if flasher
-onMilli_26=
-offMilli_26=
-
-
-#DCC Address to respond to 0=n/a
-address_27=
-#Type 1=toggle, 0=button/input
-type_27=0
-#Default state of pin 1=on, 0=off 
-defaultState_27=0
-#Mux output pin to drive      
-outputMuxPin_27=
-#Arduino output pin to drive (digital)
-outputArduinoPin_27=
-#PWM Servo to toggle to on/off position
-servoToToggle_27=
-#true=flash output, false=no time, no flash.
-isFlasher_27=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_27=
-#Used internally for timing if flasher
-onMilli_27=
-offMilli_27=
-
-
-#DCC Address to respond to 0=n/a
-address_28=
-#Type 1=toggle, 0=button/input
-type_28=0
-#Default state of pin 1=on, 0=off 
-defaultState_28=0
-#Mux output pin to drive      
-outputMuxPin_28=
-#Arduino output pin to drive (digital)
-outputArduinoPin_28=
-#PWM Servo to toggle to on/off position
-servoToToggle_28=
-#true=flash output, false=no time, no flash.
-isFlasher_28=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_28=
-#Used internally for timing if flasher
-onMilli_28=
-offMilli_28=
-
-
-#DCC Address to respond to 0=n/a
-address_29=
-#Type 1=toggle, 0=button/input
-type_29=0
-#Default state of pin 1=on, 0=off 
-defaultState_29=0
-#Mux output pin to drive      
-outputMuxPin_29=
-#Arduino output pin to drive (digital)
-outputArduinoPin_29=
-#PWM Servo to toggle to on/off position
-servoToToggle_29=
-#true=flash output, false=no time, no flash.
-isFlasher_29=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_29=
-#Used internally for timing if flasher
-onMilli_29=
-offMilli_29=
-
-
-#DCC Address to respond to 0=n/a
-address_30=
-#Type 1=toggle, 0=button/input
-type_30=0
-#Default state of pin 1=on, 0=off 
-defaultState_30=0
-#Mux output pin to drive      
-outputMuxPin_30=
-#Arduino output pin to drive (digital)
-outputArduinoPin_30=
-#PWM Servo to toggle to on/off position
-servoToToggle_30=
-#true=flash output, false=no time, no flash.
-isFlasher_30=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_30=
-#Used internally for timing if flasher
-onMilli_30=
-offMilli_30=
-
-
-#DCC Address to respond to 0=n/a
-address_31=
-#Type 1=toggle, 0=button/input
-type_31=0
-#Default state of pin 1=on, 0=off 
-defaultState_31=0
-#Mux output pin to drive      
-outputMuxPin_31=
-#Arduino output pin to drive (digital)
-outputArduinoPin_31=
-#PWM Servo to toggle to on/off position
-servoToToggle_31=
-#true=flash output, false=no time, no flash.
-isFlasher_31=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_31=
-#Used internally for timing if flasher
-onMilli_31=
-offMilli_31=
-
-
-#DCC Address to respond to 0=n/a
-address_32=
-#Type 1=toggle, 0=button/input
-type_32=0
-#Default state of pin 1=on, 0=off 
-defaultState_32=0
-#Mux output pin to drive      
-outputMuxPin_32=
-#Arduino output pin to drive (digital)
-outputArduinoPin_32=
-#PWM Servo to toggle to on/off position
-servoToToggle_32=
-#true=flash output, false=no time, no flash.
-isFlasher_32=
-#Milliseconds to leave output on for.  0 means don't auto off
-durationMilli_32=
-#Used internally for timing if flasher
-onMilli_32=
-offMilli_32=
-
-
-
-
-
-
-
+onMilli_1 = 
+offMilli_1 = 
+
+address_2 = 
+type_2 = 0
+state_2 = 0
+outputMuxPin_2 = 
+outputArduinoPin_2 = 
+servoToToggle_2 = 
+isFlasher_2 = 
+durationMilli_2 = 
+onMilli_2 = 
+offMilli_2 = 
+
+address_3 = 
+type_3 = 0
+state_3 = 0
+outputMuxPin_3 = 
+outputArduinoPin_3 = 
+servoToToggle_3 = 
+isFlasher_3 = 
+durationMilli_3 = 
+onMilli_3 = 
+offMilli_3 = 
+
+address_4 = 
+type_4 = 0
+state_4 = 0
+outputMuxPin_4 = 
+outputArduinoPin_4 = 
+servoToToggle_4 = 
+isFlasher_4 = 
+durationMilli_4 = 
+onMilli_4 = 
+offMilli_4 = 
+
+address_5 = 
+type_5 = 0
+state_5 = 0
+outputMuxPin_5 = 
+outputArduinoPin_5 = 
+servoToToggle_5 = 
+isFlasher_5 = 
+durationMilli_5 = 
+onMilli_5 = 
+offMilli_5 = 
+
+address_6 = 
+type_6 = 0
+state_6 = 0
+outputMuxPin_6 = 
+outputArduinoPin_6 = 
+servoToToggle_6 = 
+isFlasher_6 = 
+durationMilli_6 = 
+onMilli_6 = 
+offMilli_6 = 
+
+address_7 = 
+type_7 = 0
+state_7 = 0
+outputMuxPin_7 = 
+outputArduinoPin_7 = 
+servoToToggle_7 = 
+isFlasher_7 = 
+durationMilli_7 = 
+onMilli_7 = 
+offMilli_7 = 
+
+address_8 = 
+type_8 = 0
+state_8 = 0
+outputMuxPin_8 = 
+outputArduinoPin_8 = 
+servoToToggle_8 = 
+isFlasher_8 = 
+durationMilli_8 = 
+onMilli_8 = 
+offMilli_8 = 
+
+address_9 = 
+type_9 = 0
+state_9 = 0
+outputMuxPin_9 = 
+outputArduinoPin_9 = 
+servoToToggle_9 = 
+isFlasher_9 = 
+durationMilli_9 = 
+onMilli_9 = 
+offMilli_9 = 
+
+address_10 = 
+type_10 = 0
+state_10 = 0
+outputMuxPin_10 = 
+outputArduinoPin_10 = 
+servoToToggle_10 = 
+isFlasher_10 = 
+durationMilli_10 = 
+onMilli_10 = 
+offMilli_10 = 
+
+address_11 = 
+type_11 = 0
+state_11 = 0
+outputMuxPin_11 = 
+outputArduinoPin_11 = 
+servoToToggle_11 = 
+isFlasher_11 = 
+durationMilli_11 = 
+onMilli_11 = 
+offMilli_11 = 
+
+address_12 = 
+type_12 = 0
+state_12 = 0
+outputMuxPin_12 = 
+outputArduinoPin_12 = 
+servoToToggle_12 = 
+isFlasher_12 = 
+durationMilli_12 = 
+onMilli_12 = 
+offMilli_12 = 
+
+address_13 = 
+type_13 = 0
+state_13 = 0
+outputMuxPin_13 = 
+outputArduinoPin_13 = 
+servoToToggle_13 = 
+isFlasher_13 = 
+durationMilli_13 = 
+onMilli_13 = 
+offMilli_13 = 
+
+address_14 = 
+type_14 = 0
+state_14 = 0
+outputMuxPin_14 = 
+outputArduinoPin_14 = 
+servoToToggle_14 = 
+isFlasher_14 = 
+durationMilli_14 = 
+onMilli_14 = 
+offMilli_14 = 
+
+address_15 = 
+type_15 = 0
+state_15 = 0
+outputMuxPin_15 = 
+outputArduinoPin_15 = 
+servoToToggle_15 = 
+isFlasher_15 = 
+durationMilli_15 = 
+onMilli_15 = 
+offMilli_15 = 
+
+address_16 = 
+type_16 = 0
+state_16 = 0
+outputMuxPin_16 = 
+outputArduinoPin_16 = 
+servoToToggle_16 = 
+isFlasher_16 = 
+durationMilli_16 = 
+onMilli_16 = 
+offMilli_16 = 
+
+address_17 = 
+type_17 = 0
+state_17 = 0
+outputMuxPin_17 = 
+outputArduinoPin_17 = 
+servoToToggle_17 = 
+isFlasher_17 = 
+durationMilli_17 = 
+onMilli_17 = 
+offMilli_17 = 
+
+address_18 = 
+type_18 = 0
+state_18 = 0
+outputMuxPin_18 = 
+outputArduinoPin_18 = 
+servoToToggle_18 = 
+isFlasher_18 = 
+durationMilli_18 = 
+onMilli_18 = 
+offMilli_18 = 
+
+address_19 = 
+type_19 = 0
+state_19 = 1
+outputMuxPin_19 = 
+outputArduinoPin_19 = 
+servoToToggle_19 = 
+isFlasher_19 = 
+durationMilli_19 = 
+onMilli_19 = 
+offMilli_19 = 
+
+address_20 = 
+type_20 = 0
+state_20 = 1
+outputMuxPin_20 = 
+outputArduinoPin_20 = 
+servoToToggle_20 = 
+isFlasher_20 = 
+durationMilli_20 = 
+onMilli_20 = 
+offMilli_20 = 
+
+address_21 = 
+type_21 = 1
+state_21 = 1
+outputMuxPin_21 = 
+outputArduinoPin_21 = 
+servoToToggle_21 = 
+isFlasher_21 = 
+durationMilli_21 = 
+onMilli_21 = 
+offMilli_21 = 
+
+address_22 = 
+type_22 = 1
+state_22 = 0
+outputMuxPin_22 = 
+outputArduinoPin_22 = 
+servoToToggle_22 = 
+isFlasher_22 = 
+durationMilli_22 = 
+onMilli_22 = 
+offMilli_22 = 
+
+address_23 = 
+type_23 = 0
+state_23 = 0
+outputMuxPin_23 = 
+outputArduinoPin_23 = 
+servoToToggle_23 = 
+isFlasher_23 = 
+durationMilli_23 = 
+onMilli_23 = 
+offMilli_23 = 
+
+address_24 = 
+type_24 = 0
+state_24 = 0
+outputMuxPin_24 = 
+outputArduinoPin_24 = 
+servoToToggle_24 = 
+isFlasher_24 = 
+durationMilli_24 = 
+onMilli_24 = 
+offMilli_24 = 
+
+address_25 = 
+type_25 = 0
+state_25 = 0
+outputMuxPin_25 = 
+outputArduinoPin_25 = 
+servoToToggle_25 = 
+isFlasher_25 = 
+durationMilli_25 = 
+onMilli_25 = 
+offMilli_25 = 
+
+address_26 = 
+type_26 = 0
+state_26 = 0
+outputMuxPin_26 = 
+outputArduinoPin_26 = 
+servoToToggle_26 = 
+isFlasher_26 = 
+durationMilli_26 = 
+onMilli_26 = 
+offMilli_26 = 
+
+address_27 = 
+type_27 = 0
+state_27 = 0
+outputMuxPin_27 = 
+outputArduinoPin_27 = 
+servoToToggle_27 = 
+isFlasher_27 = 
+durationMilli_27 = 
+onMilli_27 = 
+offMilli_27 = 
+
+address_28 = 
+type_28 = 0
+state_28 = 0
+outputMuxPin_28 = 
+outputArduinoPin_28 = 
+servoToToggle_28 = 
+isFlasher_28 = 
+durationMilli_28 = 
+onMilli_28 = 
+offMilli_28 = 
+
+address_29 = 
+type_29 = 1
+state_29 = 1
+outputMuxPin_29 = 
+outputArduinoPin_29 = 
+servoToToggle_29 = 
+isFlasher_29 = 
+durationMilli_29 = 
+onMilli_29 = 
+offMilli_29 = 
+
+address_30 = 
+type_30 = 1
+state_30 = 1
+outputMuxPin_30 = 
+outputArduinoPin_30 = 
+servoToToggle_30 = 
+isFlasher_30 = 
+durationMilli_30 = 
+onMilli_30 = 
+offMilli_30 = 
+
+address_31 = 
+type_31 = 0
+state_31 = 1
+outputMuxPin_31 = 
+outputArduinoPin_31 = 
+servoToToggle_31 = 
+isFlasher_31 = 
+durationMilli_31 = 
+onMilli_31 = 
+offMilli_31 = 
+
+address_32 = 
+type_32 = 1
+state_32 = 0
+outputMuxPin_32 = 
+outputArduinoPin_32 = 
+servoToToggle_32 = 
+isFlasher_32 = 
+durationMilli_32 = 
+onMilli_32 = 
+offMilli_32 = 
