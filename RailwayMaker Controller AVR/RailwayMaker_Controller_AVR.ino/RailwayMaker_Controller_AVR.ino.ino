@@ -26,9 +26,7 @@
 
 
 // set up variables using the SD utility library functions:
-Sd2Card card;
-SdVolume volume;
-SdFile root;
+File config_file;
 const int chipSelect = 8; 
 
 #define PIN 4 // NEOPIXEL Pin num
@@ -63,25 +61,19 @@ bool forwards = false;
 int ir_speed = 0;
 int ir_train = 3;
 
-int sensorPin = A5;
-int sensorValue = 0;
-int sensorMin = 0;        // minimum sensor value
-int sensorMax = 31;           // maximum sensor value
-
-
 typedef struct
 {
-    int               address;                // DCC Address to respond to 0=n/a
+    //int             address;                // DCC Address to respond to 0=n/a
     byte              type;                   // Type 1=toggle, 0=button/input
     byte              defaultState;           // Default state of pin 1=on, 0=off
     int               outputMuxPin;           // Mux output pin to drive        
     int               outputArduinoPin;       // Arduino output pin to drive (digital)
     int               servoToToggle;          // PWM Servo to toggle to on/off position
     boolean           isFlasher;              // true=flash output, false=no time, no flash.
-    int               durationMilli;          // Milliseconds to leave output on for.  0 means don't auto off
+    //int               durationMilli;          // Milliseconds to leave output on for.  0 means don't auto off
     
-    unsigned long     onMilli;                // Used internally for timing if flasher
-    unsigned long     offMilli;               // 
+    int     onMilli;                // Used internally for timing if flasher
+    int     offMilli;               // 
 } muxIO;
 muxIO muxIOConfig[32];
 
@@ -103,17 +95,10 @@ void setup() {
   Serial.begin(9600);
   
   Wire.begin();
-  Serial.println("loading");
-  
-  
-  colorWipe(strip.Color(255, 255, 51), 5);
   
   // SD pin 10 must be set as output
   pinMode(10, OUTPUT);     
   
-  //MUX
-  setMux();
-
   // Neopixels
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
@@ -137,46 +122,45 @@ void setup() {
   
   // DEBUG
   scanI2C();
-
-  lcd.setCursor(0,0);
-  lcd.print("Initializing SD");
-  // we'll use the initialization code from the utility libraries
-  // since we're just testing if the card is working!
-  if (!card.init(SPI_HALF_SPEED, chipSelect)) {
-    lcd.setCursor(0,1);
-    lcd.print("sd failed");
+ 
+  if (!SD.begin(chipSelect)) {
+    Serial.println("sd failed");
     return;
-  } else {
-   lcd.setCursor(0,1);
-   lcd.print("sd present"); 
   }
   
-  delay(1000);
+  delay(200);
   lcd.clear();
+  
+  // open the config file for reading:
+  config_file = SD.open("config.txt");
+  if (config_file) {
+    // read from the file until there's nothing else in it:
+    while (config_file.available()) {
+      String config_line = String(config_file.read());
+      String id = config_line.substring(config_line.lastIndexOf('_'), config_line.lastIndexOf('='));
+      String val = config_line.substring(config_line.lastIndexOf('='));
+    }
+    // close the file:
+    config_file.close();
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("config.txt err");
+  }
 
+  delay(200);
+  lcd.clear();
+  
+  //MUX
+  setMux();
+  
 //-------- Write characters on the display ------------------
 // NOTE: Cursor Position: (CHAR, LINE) start at 0  
-  lcd.setCursor(0,0); //Start at character 4 on line 0
-  lcd.print("T");
-  lcd.print(ir_train);
-  
-  delay(1000);
-  lcd.setCursor(0,1);
-  lcd.print("RailwayMaker.com");
-  //delay(8000);
-
-  set_train(0, ir_train, false, ir_speed );
-
-  lcd.setCursor(4,0);
-  lcd.print( "-stop-" );
-  
-  //set_train(0, 3, forwards, 10);
-  
+   
   // Test Lights
   //colorWipe(strip.Color(255, 0, 0), 50); // Red
   //colorWipe(strip.Color(0, 255, 0), 50); // Green
   //colorWipe(strip.Color(0, 0, 255), 15); // Blue
-  colorWipe(strip.Color(255, 255, 51), 50); // White White ???
+  //colorWipe(strip.Color(255, 255, 51), 50); // White White ???
  
   pwm.begin();
   pwm.setPWMFreq(1600);  // This is the maximum PWM frequency
@@ -186,38 +170,10 @@ void setup() {
   // must be changed after calling Wire.begin() (inside pwm.begin())
   TWBR = 12; // upgrade to 400KHz!
   
-  
-
-  
 }
 
 int LoopCount=0;
 void loop() {
-  
-  /*
-  sensorValue = analogRead(sensorPin);
-  sensorValue = map(sensorValue, 0, 1023, -5, 5);
-  
-  if(sensorValue > 0)
-  {
-    forwards = true;
-  }
-  else
-  {
-    forwards = false;
-    sensorValue = sensorValue * -1;
-  }
-  
-  //forwards = !forwards;
-  //set_train(0, 3, forwards, 10);
-  //delay(5000);
-  lcd.setCursor(0,0);
-  lcd.print("                            ");
-  lcd.setCursor(0,0);
-  lcd.print(sensorValue);
-  set_train(0, 3, forwards, sensorValue);
-  delay(50);
-  */
   
   if (irrecv.decode(&results)) {
 
@@ -228,83 +184,38 @@ void loop() {
       Serial.println("forward");
       ir_speed = ir_speed--;
       set_train(0, ir_train, true, ((ir_speed < 0) ? (ir_speed * -1) : ir_speed)  );
-
-      lcd.setCursor(0,0);
-      lcd.print("T");
-      lcd.setCursor(1,0);
-      lcd.print(ir_train);
-      
-      
-      lcd.setCursor(4,0);
-      lcd.print(  ((ir_speed == 0) ? "-stop-" :  ((ir_speed < 0) ? "<< " : ">> " )) );
-      
-      if(ir_speed != 0)
-      {
-        lcd.setCursor(7,0);
-        lcd.clear(); // clear
-        lcd.setCursor(7,0);
-        lcd.print(ir_speed);
-      }
     }
     if(results.value == 0x77E1E0E4)
     {
-      Serial.println("backward");
+      //Serial.println("backward");
       ir_speed = ir_speed++;
       set_train(0, ir_train, ((ir_speed == 0) ? true : false), ((ir_speed < 0) ? (ir_speed * -1) : ir_speed)  );
-
-      lcd.setCursor(0,0);
-      lcd.print("T");
-      lcd.setCursor(1,0);
-      lcd.print(ir_train);
-
-      lcd.setCursor(4,0);
-      lcd.print(  ((ir_speed == 0) ? "-stop-" :  ((ir_speed < 0) ? "<< " : ">> " )) );
-      
-      if(ir_speed != 0)
-      {
-        lcd.setCursor(7,0);
-        lcd.clear(); // clear
-        lcd.setCursor(7,0);
-        lcd.print(ir_speed);
-      }
     }
     else if(results.value == 0x77E1D0E4)
     {
-      Serial.println("up");
+      //Serial.println("up");
       ir_train = ir_train++;
-      lcd.setCursor(0,0);
-      lcd.print("T");
-      lcd.setCursor(1,0);
-      lcd.print(ir_train);
     }  
     else if(results.value == 0x77E1B0E4)
     {
-      Serial.println("down");
+      //Serial.println("down");
       ir_train = ir_train--;
-      lcd.setCursor(0,0);
-      lcd.print("T");
-      lcd.setCursor(1,0);
-      lcd.print(ir_train);
     } 
     else if(results.value == 0x77E17AE4)
     {
-      Serial.println("play"); // can be the same as middle...
+      //Serial.println("play"); // can be the same as middle...
       set_train(0, 3, true, 0);
     }   
     else if(results.value == 0x77E120E4)
     {
-      Serial.println("middle");
-      
+      //Serial.println("middle");
+ 
       ir_speed = 0;
       set_train(0, ir_train, false, ir_speed );
-
-      lcd.setCursor(4,0);
-      lcd.print( "-stop-" );
-      
     }  
     else if(results.value == 0x77E140E4)
     {
-      Serial.println("menu");
+      //Serial.println("menu");
     }
     irrecv.resume(); // Receive the next value
   }
@@ -315,14 +226,26 @@ void loop() {
 
 void setMux()
 {
+  int m = 0; // mux to 32
   for(int y=0; y<2; y++) 
   {
     mcp[y] = Adafruit_MCP23017();
     mcp[y].begin(y ? 3 : 7);
     for(int x=0; x<16; x++) 
     {
-      mcp[y].pinMode(x, INPUT);
-      mcp[y].pullUp(x, HIGH);
+      if(muxIOConfig[x*y].type == 0)
+      {
+        mcp[y].pinMode(x, INPUT);
+        mcp[y].pullUp(x, HIGH);
+      }
+      else
+      {
+          if(muxIOConfig[x*y].defaultState == 0)
+            mcp[y].digitalWrite(0, LOW);
+          else
+            mcp[y].digitalWrite(0, HIGH);
+      }
+      m=m++;
     }
   }
 }
@@ -387,7 +310,7 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 
   Wire.beginTransmission(DCC);
 
-  Serial.print(" Sending: ");
+  //Serial.print(" Sending: ");
 
   Wire.write(rawcmd);
 
@@ -412,7 +335,7 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
   Serial.println(rawcmd ^ address ^ dcc, BIN);
 
   switch(Wire.endTransmission()) {
-
+/*
     case 0: //success
 
       break;
@@ -438,14 +361,14 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
     default:
 
       Serial.println(" I2C send failed: other");
-
+*/
   }
 
   uint8_t ret = Wire.requestFrom(DCC, 2);
 
   if(ret != 2) {
 
-      Serial.print(" I2C didn't reply with two status bytes, bytes read:");
+      Serial.print(" I2C err:");
 
       Serial.println(ret);
 
@@ -466,7 +389,7 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
       Serial.println(~b);
 
     } else {
-
+/*
       switch(a) {
 
         case 0:
@@ -498,7 +421,7 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
           Serial.println(" Other Error.");
 
       }
-
+*/
     }
 
   }
@@ -506,6 +429,7 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 }
 
 // Fill the dots one after the other with a color
+/*
 void colorWipe(uint32_t c, uint8_t wait) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c);
@@ -513,7 +437,7 @@ void colorWipe(uint32_t c, uint8_t wait) {
       delay(wait);
   }
 }
-
+*/
 void scanI2C()
 {
   byte error, address;
@@ -543,13 +467,13 @@ void scanI2C()
       lcd.print(address,HEX);
       Serial.println(address,HEX);
       //lcd.print("  !");
-      delay(1000);
+      delay(200);
       nDevices++;
     }
     else if (error==4) 
     {
       lcd.setCursor(0,1);
-      lcd.print("error at address 0x");
+      lcd.print("error 0x");
       if (address<16) 
         lcd.print("0");
       lcd.print(address,HEX);
@@ -560,9 +484,8 @@ void scanI2C()
   lcd.clear();
   lcd.setCursor(0,0);
   if (nDevices == 0)
-    lcd.print("No I2C devices found\n");
-  else
-    lcd.print("I2C done");
+    lcd.println("No I2C"); // No I2C devices
 
-  delay(500);           // wait 5 seconds for next scan
+  //delay(500);           // wait 5 seconds for next scan
 }
+
