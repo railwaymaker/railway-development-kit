@@ -1,202 +1,133 @@
 [config]
 #Number of WS2812 lights
-ws2812_count = 5
+ws2812count = 5
 
 [mux]
-#Type 1 = toggle, 0 = button/input
-type_1 = 0
-#Default state of pin 1 = on, 0 = off 
-state_1 = 0
-#Mux output pin to drive  
-outputMuxPin_1 = 0
-#PWM Servo to toggle to on/off position
-servoToToggle_1 = 0
-#Milliseconds to leave output on for.  0 means don't auto off
-onSecs_1 = 0
+state1 = 0
+out1 = 31
+sec1 = 0
 
-type_2 = 0
-state_2 = 0
-outputMuxPin_2 = 0
-servoToToggle_2 = 0
-onSecs_2 = 0
+state2 = 0
+out2 = 30
+sec2 = -1
 
-type_3 = 0
-state_3 = 0
-outputMuxPin_3 = 0
-servoToToggle_3 = 0
-onSecs_3 = 0
+state3 = 0
+out3 = 29
+sec3 = -1
 
-type_4 = 0
-state_4 = 0
-outputMuxPin_4 = 0
-servoToToggle_4 = 0
-onSecs_4 = 0
+state4 = 0
+out4 = 0
+sec4 = -1
 
-type_5 = 0
-state_5 = 0
-outputMuxPin_5 = 0
-outputArduinoPin_5 = 0
-servoToToggle_5 = 0
-onSecs_5 = 0
+state5 = 0
+out5 = 0
+sec5 = -1
 
-type_6 = 0
-state_6 = 0
-outputMuxPin_6 = 0
-servoToToggle_6 = 0
-onSecs_6 = 0
+state6 = 0
+out6 = 0
+sec6 = -1
 
-type_7 = 0
-state_7 = 0
-outputMuxPin_7 = 0
-servoToToggle_7 = 0
-onSecs_7 = 0
+state7 = 0
+out7 = 0
+sec7 = -1
 
-type_8 = 0
-state_8 = 0
-outputMuxPin_8 = 0
-servoToToggle_8 = 0
-onSecs_8 = 0
+state8 = 0
+out8 = 0
+sec8 = -1
 
-type_9 = 0
-state_9 = 0
-outputMuxPin_9 = 0
-servoToToggle_9 = 0
-onSecs_9 = 0
+state9 = 0
+out9 = 0
+sec9 = -1
 
-type_10 = 0
-state_10 = 0
-outputMuxPin_10 = 0
-servoToToggle_10 = 0
-onSecs_10 = 0
+state10 = 0
+out10 = 0
+sec10 = -1
 
-type_11 = 0
-state_11 = 0
-outputMuxPin_11 = 0
-servoToToggle_11 = 0
-onSecs_11 = 0
+state11 = 0
+out11 = 0
+sec11 = -1
 
-type_12 = 0
-state_12 = 0
-outputMuxPin_12 = 0
-servoToToggle_12 = 0
-onSecs_12 = 0
+state12 = 0
+out12 = 0
+sec12 = -1
 
-type_13 = 0
-state_13 = 0
-outputMuxPin_13 = 0
-servoToToggle_13 = 0
-onSecs_13 = 0
+state13 = 0
+out13 = 0
+sec13 = -1
 
-type_14 = 0
-state_14 = 0
-outputMuxPin_14 = 0
-servoToToggle_14 = 0
-onSecs_14 = 0
+state14 = 0
+out14 = 0
+sec14 = -1
 
-type_15 = 0
-state_15 = 0
-outputMuxPin_15 = 0
-servoToToggle_15 = 0
-onSecs_15 = 0
+state15 = 0
+out15 = 0
+sec15 = -1
 
-type_16 = 0
-state_16 = 0
-outputMuxPin_16 = 0
-servoToToggle_16 = 0
-onSecs_16 = 0
+state16 = 0
+out16 = 0
+sec16 = -1
 
-type_17 = 0
-state_17 = 0
-outputMuxPin_17 = 0
-servoToToggle_17 = 0
-onSecs_17 = 0
+state17 = 0
+out17 = 0
+sec17 = -1
 
-type_18 = 0
-state_18 = 0
-outputMuxPin_18 = 0
-servoToToggle_18 = 0
-onSecs_18 = 0
+state18 = 0
+out18 = 0
+sec18 = -1
 
-type_19 = 0
-state_19 = 1
-outputMuxPin_19 = 0
-servoToToggle_19 = 0
-onSecs_19 = 0
+state19 = 1
+out19 = 0
+sec19 = -1
 
-type_20 = 0
-state_20 = 1
-outputMuxPin_20 = 0
-servoToToggle_20 = 0
-onSecs_20 = 0
+state20 = 1
+out20 = 0
+sec20 = -1
 
-type_21 = 1
-state_21 = 1
-outputMuxPin_21 = 0
-servoToToggle_21 = 0
-onSecs_21 = 0
+state21 = 1
+out21 = 0
+sec21 = -1
 
-type_22 = 1
-state_22 = 0
-outputMuxPin_22 = 0
-servoToToggle_22 = 0
-onSecs_22 = 0
+state22 = 0
+out22 = 0
+sec22 = -1
 
-type_23 = 0
-state_23 = 0
-outputMuxPin_23 = 0
-servoToToggle_23 = 0
-onSecs_23 = 0
+state23 = 0
+out23 = 0
+sec23 = -1
 
-type_24 = 0
-state_24 = 0
-outputMuxPin_24 = 0
-servoToToggle_24 = 0
-onSecs_24 = 0
+state24 = 0
+out24 = 0
+sec24 = -1
 
-type_25 = 0
-state_25 = 0
-outputMuxPin_25 = 0
-servoToToggle_25 = 0
-onSecs_25 = 0
+state25 = 0
+out25 = 0
+sec25 = -1
 
-type_26 = 0
-state_26 = 0
-outputMuxPin_26 = 0
-servoToToggle_26 = 0
-onSecs_26 = 0
+state26 = 0
+out26 = 0
+sec26 = 0
 
-type_27 = 0
-state_27 = 0
-outputMuxPin_27 = 0
-servoToToggle_27 = 0
-onSecs_27 = 0
+state27 = 0
+out27 = 0
+sec27 = 0
 
-type_28 = 1
-state_28 = 0
-outputMuxPin_28 = 0
-servoToToggle_28 = 0
-onSecs_28 = 0
+state28 = 0
+out28 = 0
+sec28 = 0
 
-type_29 = 1
-state_29 = 1
-outputMuxPin_29 = 0
-servoToToggle_29 = 0
-onSecs_29 = 3
+state29 = 1
+out29 = 18
+sec29 = 3
 
-type_30 = 1
-state_30 = 1
-outputMuxPin_30 = 0
-servoToToggle_30 = 0
-onSecs_30 = 4
+state30 = 1
+out30 = 0
+sec30 = 4
 
-type_31 = 1
-state_31 = 1
-outputMuxPin_31 = 0
-servoToToggle_31 = 0
-onSecs_31 = 2
+state31 = 1
+out31 = 17
+sec31 = 2
 
-type_32 = 1
-state_32 = 0
-outputMuxPin_32 = 0
-servoToToggle_32 = 0
-onSecs_32 = 0
+state32 = 0
+out32 = 16
+sec32 = 0
+
