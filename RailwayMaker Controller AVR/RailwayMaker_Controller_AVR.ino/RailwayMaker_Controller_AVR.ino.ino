@@ -66,31 +66,27 @@ int ir_train = 3;
 
 typedef struct
 {
-    //int             address;                // DCC Address to respond to 0=n/a
     bool              type;                   // Type 1=toggle, 0=button/input
     bool              defaultState;           // Default state of pin 1=on, 0=off
-    //int               outputMuxPin;           // Mux output pin to drive        
-    //int               outputArduinoPin;       // Arduino output pin to drive (digital)
+    bool              currentState;           // Default state of pin 1=on, 0=off
+    int               outputMuxPin;           // Mux output pin to drive        
     int               servoToToggle;          // PWM Servo to toggle to on/off position
-    //boolean           isFlasher;              // true=flash output, false=no time, no flash.
-    //int               durationMilli;          // Milliseconds to leave output on for.  0 means don't auto off
+    int               durationSeconds;        // Seconds to leave output on for.  0 means don't auto off
     
-    //int     onMilli;                // Used internally for timing if flasher
-    //int     offMilli;               // 
+    unsigned long     onMilli = 0;            // Used internally for timing if flasher
 } muxIO;
 muxIO muxIOConfig[32];
 
 typedef struct
 {
     int               address;                // DCC Address to respond to 0=n/a
-    int               defaultPos;             // Default position
     int               offPos;                 // Default position
     int               onPos;                  // Default position    
     byte              sweepSpeed;             // Speed servo moves
     boolean           isConstantSweep;        // Allows the servo to constantly sweep back and forth rather than toggle
     
 } servoPWM;
-//servoPWM servoConfig[32]; 
+servoPWM servoConfig[32]; 
 
 void setup() {
   
@@ -114,96 +110,14 @@ void setup() {
   lcd.begin(20,4);         // initialize the lcd for 20 chars 4 lines, turn on backlight  
   lcd.clear();
   lcd.backlight(); // finish with backlight on  
-
-  // CONFIG
-  const size_t bufferLen = 80;
-  char buffer[bufferLen];
-
-  const char *filename = "/config.txt";
-  Serial.begin(9600);
-  SPI.begin();
-  if (!sd.begin(SD_SELECT))
-    while (1)
-      Serial.println("SD failed");
   
-  IniFile ini(filename);
-  if (!ini.open()) {
-    Serial.print("config missing");
-    // Cannot do anything else
-    while (1)
-      ;
-  }
-
-  // Check the file is valid. This can be used to warn if any lines
-  // are longer than the buffer.
-  if (!ini.validate(buffer, bufferLen)) {
-    Serial.print(" not valid: ");
-    //printErrorMessage(ini.getError());
-    // Cannot do anything else
-    //while (1)
-    //  ;
-  }
   
-  bool blnVal; 
-  bool found;
-  int m = 1; // mux to 32
-  String setting;
-  char buf[30];
-  
-  for(int y=0; y<2; y++) 
-  {
-    for(int x=0; x<16; x++) 
-    {
-      memcpy(buf, "type_", 5);
-      itoa(m, &buf[5], 10);      
-      
-      blnVal = false;
-      found = false;
-      Serial.print(buf);
-      lcd.setCursor(0, 1);
-      lcd.print(buf);
-
-      found = ini.getValue("mux", buf, buffer, bufferLen, blnVal);
-      if (found)
-      {
-        muxIOConfig[m].type = blnVal;
-        Serial.print("=");
-        Serial.println(blnVal);
-        lcd.setCursor(0, 2);
-        lcd.print(blnVal);
-      }
-
-
-      
-      //look for defaultState_
-      memcpy(buf, "state_", 6);
-      itoa(m, &buf[6], 10);      
-      
-      blnVal = false;
-      found = false;
-      Serial.print(buf);
-      lcd.setCursor(0, 1);
-      lcd.print(buf);
-
-      found = ini.getValue("mux", buf, buffer, bufferLen, blnVal);
-      if (found)
-      {
-        muxIOConfig[m].defaultState = blnVal;
-        Serial.print("=");
-        Serial.println(blnVal);
-        lcd.setCursor(0, 2);
-        lcd.print(blnVal);
-      }
-
-
-      
-      m=m+1;
-    }
-  }
-  
-  Serial.print("???=");
-  Serial.println(muxIOConfig[19].defaultState);
-  Serial.println(muxIOConfig[19].defaultState ? "y" : "n");
+  delay(300);
+  readBoolConfig("type_", 0, 1);
+  readBoolConfig("state_", 0, 2);
+  readBoolConfig("onSecs_", 1, 3);
+  //readBoolConfig("servoToToggle_", 1, 4);
+  //readBoolConfig("outputMuxPin_", 1, 5);
   
   // Neopixels
   strip.begin();
@@ -213,13 +127,13 @@ void setup() {
   irrecv.enableIRIn(); // Start the receiver
     
   // DEBUG
-  scanI2C();
+  //scanI2C();
 
   delay(200);
   lcd.clear();
   
   //MUX
-  setMux();
+  //setMux();
   
 //-------- Write characters on the display ------------------
 // NOTE: Cursor Position: (CHAR, LINE) start at 0  
@@ -301,20 +215,51 @@ void setMux()
     mcp[y].begin(y ? 3 : 7);
     for(int x=0; x<16; x++) 
     {
-      if(muxIOConfig[m].type)
+      //bool state = mcp[y].digitalRead(x);
+      
+      if(!muxIOConfig[m].type)
       {
         mcp[y].pinMode(x, INPUT);
         mcp[y].pullUp(x, HIGH);
       }
       else
       {
-          if(muxIOConfig[m].defaultState)
+          mcp[y].pinMode(x, OUTPUT);
+          
+          // DOES NOT toggle && not initialised 
+          if(muxIOConfig[m].durationSeconds == 0) 
           {
-            mcp[y].digitalWrite(x, HIGH);
+            if(muxIOConfig[m].defaultState)
+            {
+              mcp[y].digitalWrite(x, HIGH);
+            }
+            else
+            {
+              mcp[y].digitalWrite(x, LOW);
+            }
           }
           else
           {
-            mcp[y].digitalWrite(x, LOW);
+            mcp[y].digitalWrite(x, mcp[y].digitalRead(x));
+          }
+          // DOES toggle && not initialised 
+          if(muxIOConfig[m].durationSeconds > 0) 
+          { 
+            Serial.println(m);
+            if(muxIOConfig[m].onMilli == 0) // initilise
+            {
+              muxIOConfig[m].currentState = (muxIOConfig[m].defaultState ? LOW : HIGH);
+            }
+            else if(millis() > (muxIOConfig[m].onMilli+(muxIOConfig[m].durationSeconds*1000))) // Expired
+            {
+              mcp[y].digitalWrite(x, (muxIOConfig[m].currentState ? LOW : HIGH)); // toggle // (muxIOConfig[m].defaultState ? LOW : HIGH)
+              muxIOConfig[m].currentState = (muxIOConfig[m].currentState ? LOW : HIGH);
+              muxIOConfig[m].onMilli = millis(); // reset
+            }
+            else // stick with curent value
+            {
+              mcp[y].digitalWrite(x,(muxIOConfig[m].currentState ? HIGH : LOW));
+            }
           }
       }
       m=m+1;
@@ -324,12 +269,23 @@ void setMux()
 
 void muxStatus()
 {
+  int m =1;
   for(int y=0; y<2; y++) 
   {
     for(int x=0; x<16; x++) 
     {
       lcd.setCursor(x, y+2);
       lcd.print(mcp[y].digitalRead(x));
+      
+      if(muxIOConfig[m].durationSeconds > 0) // If toggles
+      {
+          if(muxIOConfig[m].onMilli == 0) // First toggle
+          {
+            muxIOConfig[m].onMilli = millis();
+          }
+      }
+      
+      m=m+1;
     }
   }
 }
@@ -440,9 +396,9 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 
   if(ret != 2) {
 
-      Serial.print(" I2C err:");
+      //Serial.print(" I2C err:");
 
-      Serial.println(ret);
+      //Serial.println(ret);
 
   } else {
 
@@ -452,13 +408,13 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 
     if(a != ~b) {
 
-      Serial.print(" Slave reply failed checksum:");
+      //Serial.print(" Slave reply failed checksum:");
 
-      Serial.print(a);
+      //Serial.print(a);
 
-      Serial.print("!=");
+      //Serial.print("!=");
 
-      Serial.println(~b);
+      //Serial.println(~b);
 
     } else {
 /*
@@ -560,6 +516,110 @@ void scanI2C()
 
   //delay(500);           // wait 5 seconds for next scan
 }
+
+
+void readBoolConfig(char setting_name[], int lookup_type, int key) // 0 = bool, 1 = int
+{
+
+  lcd.setCursor(0,0);
+  lcd.print("Loading Config...");
+
+  // CONFIG
+  const size_t bufferLen = 80;
+  char buffer[bufferLen];
+
+  const char *filename = "/config.txt";
+  Serial.begin(9600);
+  SPI.begin();
+  if (!sd.begin(SD_SELECT))
+    while (1)
+      Serial.println("SD failed");
+  
+  IniFile ini(filename);
+  if (!ini.open()) {
+    Serial.print("config missing");
+    // Cannot do anything else
+    while (1)
+      ;
+  }
+
+  // Check the file is valid. This can be used to warn if any lines
+  // are longer than the buffer.
+  if (!ini.validate(buffer, bufferLen)) {
+    Serial.print(" not valid: ");
+    //printErrorMessage(ini.getError());
+    // Cannot do anything else
+    //while (1)
+    //  ;
+  }
+  
+  bool blnVal; 
+  bool found;
+  int m = 1; // mux to 32
+  String setting;
+  char buf[30];
+  
+  for(int y=0; y<2; y++) 
+  {
+    for(int x=0; x<16; x++) 
+    {
+      int setting_len = strlen(setting_name);
+      memcpy(buf, setting_name, setting_len);
+      itoa(m, &buf[setting_len], 10);      
+      
+      blnVal = false;
+      found = false;
+      //Serial.print(buf);
+      lcd.setCursor(0, 1);
+      lcd.print(buf);
+
+      if(lookup_type == 0) // BOOL
+      {
+        found = ini.getValue("mux", buf, buffer, bufferLen, blnVal);
+        //Serial.print("=");
+        //Serial.println(blnVal);
+        lcd.setCursor(0, 2);
+        lcd.print(blnVal);
+      }
+      else // INT
+      { 
+        found = ini.getValue("mux", buf, buffer, bufferLen);
+        //Serial.print("=");
+        //Serial.println(buffer);
+        lcd.setCursor(0, 2);
+        lcd.print(buffer);
+      } 
+
+      if (found)
+      {
+        switch(key) 
+        {
+          case 1:
+                    muxIOConfig[m].type = blnVal; // type_
+                    break;
+          case 2:
+                    muxIOConfig[m].defaultState = blnVal; // state_
+                    break;
+          case 3:
+                    //Serial.println(buffer);
+                    muxIOConfig[m].durationSeconds = atoi(buffer); // durationMilli_
+                    break;
+          case 4:
+                    //Serial.println(buffer);
+                    muxIOConfig[m].servoToToggle = atoi(buffer); // servoToToggle_
+                    break;
+          case 5:
+                    //Serial.println(buffer);
+                    muxIOConfig[m].outputMuxPin = atoi(buffer); // outputMuxPin_
+                    break;
+        }
+        
+      }
+      m=m+1;
+    }
+  }  
+}
+
 
 
 
