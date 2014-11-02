@@ -156,6 +156,9 @@ void setup() {
   // must be changed after calling Wire.begin() (inside pwm.begin())
   TWBR = 12; // upgrade to 400KHz!
   
+  
+  set_train(0, 3, true, 0);
+  
 }
 
 void loop() {
@@ -595,7 +598,7 @@ void getSDline() {
         if(s.substring(0,s.indexOf("=")-3) == "sec")
           muxIOConfig[m].durationSeconds = v; 
         
-        //if(s.substring(0,s.indexOf("=")-3) == "out" && m > 16)
+        //if(s.substring(0,s.indexOf("=")-3) == "out")
         //  muxIOConfig[m].outputIO = v;
          
         //if(s.substring(0,s.indexOf("=")-3) == "min")
