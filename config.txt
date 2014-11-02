@@ -2,68 +2,68 @@
 ws2812count = 5
 
 [io]
-state1 = 0
-out1 = 1
-sec1 = 0
-min1 = 0
-max1 = 90
-sweep1 = 0
+state01 = 0
+out01 = 1
+sec01 = 0
+min01 = 0
+max01 = 90
+sweep01 = 0
 
-state2 = 0
-out2 = 30
-sec2 = -1
-min2 = 0
-max2 = 90
-sweep2 = 0
+state02 = 0
+out02 = 30
+sec02 = -1
+min02 = 0
+max02 = 90
+sweep02 = 0
 
-state3 = 0
-out3 = 29
-sec3 = -1
-min3 = 0
-max3 = 90
-sweep3 = 0
+state03 = 0
+out03 = 29
+sec03 = -1
+min03 = 0
+max03 = 90
+sweep03 = 0
 
-state4 = 0
-out4 = 0
-sec4 = -1
-min4 = 0
-max4 = 90
-sweep4 = 0
+state04 = 0
+out04 = 0
+sec04 = -1
+min04 = 0
+max04 = 90
+sweep04 = 0
 
-state5 = 0
-out5 = 0
-sec5 = -1
-min5 = 0
-max5 = 90
-sweep5 = 0
+state05 = 0
+out05 = 0
+sec05 = -1
+min05 = 0
+max05 = 90
+sweep05 = 0
 
-state6 = 0
-out6 = 0
-sec6 = -1
-min6 = 0
-max6 = 90
-sweep6 = 0
+state06 = 0
+out06 = 0
+sec06 = -1
+min06 = 0
+max06 = 90
+sweep06 = 0
 
-state7 = 0
-out7 = 0
-sec7 = -1
-min7 = 0
-max7 = 90
-sweep7 = 0
+state07 = 0
+out07 = 0
+sec07 = -1
+min07 = 0
+max07 = 90
+sweep07 = 0
 
-state8 = 0
-out8 = 0
-sec8 = -1
-min8 = 0
-max8 = 90
-sweep8 = 0
+state08 = 0
+out08 = 0
+sec08 = -1
+min08 = 0
+max08 = 90
+sweep08 = 0
 
-state9 = 0
-out9 = 0
-sec9 = -1
-min9 = 0
-max9 = 90
-sweep9 = 0
+state09 = 0
+out09 = 0
+sec09 = -1
+min09 = 0
+max09 = 90
+sweep09 = 0
 
 state10 = 0
 out10 = 0

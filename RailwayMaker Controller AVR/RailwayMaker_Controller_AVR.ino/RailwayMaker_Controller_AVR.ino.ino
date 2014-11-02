@@ -21,7 +21,7 @@
 
 #define SD_SELECT 8
 
-#include <EEPROM.h>
+//#include <EEPROM.h>
 #include <IniFile.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
@@ -66,7 +66,7 @@ typedef struct
     //bool              enabled = 0;               // if active or not   
     bool              defaultState = 0;          // Default state of pin 1=on, 0=off
     bool              currentState = 0;          // Default state of pin 1=on, 0=off
-    byte              output = 0;                // > 0 Mux output pin to drive,  > 32 servo to toggle
+    byte              outputIO = 0;                // > 0 Mux output pin to drive, < 0 servo to toggle
     byte              servoMin = 0;              // 
     byte              servoMax = 0;              // 
     //bool              servoSweep = 0;            // if the servo should constantly sweep
@@ -89,7 +89,7 @@ typedef struct
 } servoPWM;
 servoPWM servoConfig[32]; 
 */
-
+SdFat sd;
 void setup() {
   
   // Neopixels
@@ -104,8 +104,8 @@ void setup() {
   
   Serial.begin(9600);
   
-  //Serial.println("Type any character to start");
-  //while (Serial.read() <= 0) {}
+  lcd.print("Type");
+  while (Serial.read() <= 0) {}
   
   Wire.begin();
   delay(100);
@@ -113,15 +113,17 @@ void setup() {
   // Configure all of the SPI select pins as outputs and make SPI
   // devices inactive, otherwise the earlier init routines may fail
   // for devices which have not yet been configured.
+  lcd.setCursor(0,0);
+  lcd.print("Loading...");
   pinMode(SD_SELECT, OUTPUT);
   digitalWrite(SD_SELECT, HIGH); // disable SD card
-  
+  SPI.begin();
+  if (!sd.begin(SD_SELECT))
+    while (1)
+      Serial.println("err1");
+      
   delay(300);
-  readBoolConfig("state", 0, 1);
-  readBoolConfig("sec", 1, 2);
-  readBoolConfig("out", 1, 3);
-  readBoolConfig("min", 1, 4);
-  readBoolConfig("max", 1, 5);
+  readConfig();
   
   // IR
   irrecv.enableIRIn(); // Start the receiver
@@ -158,6 +160,9 @@ void setup() {
 }
 
 void loop() {
+  
+  colorWipe(strip.Color(255, 0, 0), 1);
+  colorWipe(strip.Color(255, 255, 0), 1);
   
   if (irrecv.decode(&results)) {
 
@@ -222,28 +227,32 @@ void setMux()
       // BUTTON
       if(muxIOConfig[m].durationSeconds == -1)
       {
-        if(muxIOConfig[m].onMilli == 0)
-        {
+        //if(muxIOConfig[m].onMilli == 0)
+        //{
           mcp[y].pinMode(x, INPUT);
           mcp[y].pullUp(x, HIGH);
-          muxIOConfig[m].onMilli = 1;
-        }
+          //muxIOConfig[m].onMilli = 1;
+        //}
         // MOVE SERVO TO POS
-        if(muxIOConfig[m].output > 32)
+        /*
+        if(muxIOConfig[m].outputIO > 32)
         {
+          
           //Serial.print("m=");
-          //Serial.println(m);
+          //Serial.println(m-32);
           //Serial.print("s=");
-          //Serial.println(muxIOConfig[m].servo);
+          //Serial.println(muxIOConfig[m].outputIO);
           if(mcp[y].digitalRead(x))
           {
-            pwm1.setPWM(muxIOConfig[m-32].output, 0, 150);
+            pwm1.setPWM(muxIOConfig[m-32].outputIO, 0, 150);
           }
           else
           {
-            pwm1.setPWM(muxIOConfig[m-32].output, 0, 600);
+            pwm1.setPWM(muxIOConfig[m-32].outputIO, 0, 600);
           }
+          
         }
+        */
         
       }
       else // TOGGLE
@@ -269,13 +278,19 @@ void setMux()
           // DOES toggle && not initialised 
           if(muxIOConfig[m].durationSeconds > 0) 
           {            
+            /*
+            Serial.println(m);
+            Serial.println(muxIOConfig[m].onMilli);
+            
             if(muxIOConfig[m].onMilli == 0) // initilise
             {
-              muxIOConfig[m].onMilli = 1; // not zero
+              Serial.println("i");
+              //muxIOConfig[m].onMilli = 1; // not zero
               muxIOConfig[m].currentState = (muxIOConfig[m].defaultState ? LOW : HIGH);
             }
             else if(millis() > (muxIOConfig[m].onMilli+(muxIOConfig[m].durationSeconds*1000))) // Expired
             {
+              Serial.println("e");
               mcp[y].digitalWrite(x, (muxIOConfig[m].currentState ? LOW : HIGH)); // toggle // (muxIOConfig[m].defaultState ? LOW : HIGH)
               muxIOConfig[m].currentState = (muxIOConfig[m].currentState ? LOW : HIGH);
               muxIOConfig[m].onMilli = millis(); // reset
@@ -284,6 +299,7 @@ void setMux()
             {
               mcp[y].digitalWrite(x,(muxIOConfig[m].currentState ? HIGH : LOW));
             }
+            */
           }
       }
       m=m+1;
@@ -472,7 +488,7 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 }
 
 // Fill the dots one after the other with a color
-/*
+
 void colorWipe(uint32_t c, uint8_t wait) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c);
@@ -480,7 +496,7 @@ void colorWipe(uint32_t c, uint8_t wait) {
       delay(wait);
   }
 }
-
+/*
 void scanI2C()
 {
   byte error, address;
@@ -533,26 +549,15 @@ void scanI2C()
 }
 */
 
+#define DEBUGLOADCONFIG
 
-void readBoolConfig(char setting_name[], int lookup_type, int key) // 0 = bool, 1 = int
+void readConfig() 
 {
- 
-  SdFat sd;
-  lcd.setCursor(0,0);
-  lcd.print("Loading...");
-
   // CONFIG
-  const size_t bufferLen = 18;
-  char buffer[bufferLen];
-
   const char *filename = "/config.txt";
-  Serial.begin(9600);
-  SPI.begin();
-  if (!sd.begin(SD_SELECT))
-    while (1)
-      Serial.println("err1");
   
   IniFile ini(filename);
+
   if (!ini.open()) {
     Serial.print("err2");
     // Cannot do anything else
@@ -562,6 +567,7 @@ void readBoolConfig(char setting_name[], int lookup_type, int key) // 0 = bool, 
 
   // Check the file is valid. This can be used to warn if any lines
   // are longer than the buffer.
+  /*
   if (!ini.validate(buffer, bufferLen)) {
     Serial.print("err3");
     //printErrorMessage(ini.getError());
@@ -569,78 +575,90 @@ void readBoolConfig(char setting_name[], int lookup_type, int key) // 0 = bool, 
     //while (1)
     //  ;
   }
+  */
   
-  bool blnVal; 
-  bool found;
-  int m = 1; // mux to 32
-  String setting;
-  char buf[30];
   
-  for(int y=0; y<2; y++) 
-  {
-    for(int x=0; x<16; x++) 
+  const size_t bufferLen = 30;
+  char buffer[bufferLen];
+  
+  const char config_lookup[5][6] = { "state", "sec", "out", "min", "max" };
+  for(int c=0; c < sizeof(config_lookup); c++)
+  { 
+   
+    bool blnVal; 
+    bool found;
+    int m = 1; // mux to 32
+
+    char buf[30];
+    
+    
+    for(int y=0; y<2; y++) 
     {
-      int setting_len = strlen(setting_name);
-      memcpy(buf, setting_name, setting_len);
-      itoa(m, &buf[setting_len], 10);      
-      
-      blnVal = false;
-      found = false;
-      
-      //Serial.print(buf);
-      //lcd.clear();
-      lcd.setCursor(0, 1);
-      lcd.print(buf);
-
-      if(lookup_type == 0) // BOOL
-      {
-        found = ini.getValue("io", buf, buffer, bufferLen, blnVal);
-        //Serial.print("=");
-        //Serial.println(blnVal);
-        lcd.setCursor(0, 2);
-        lcd.print(blnVal);
-      }
-      else // INT
-      { 
-        found = ini.getValue("io", buf, buffer, bufferLen);
-        //Serial.print("=");
-        //Serial.println(buffer);
-        lcd.setCursor(0, 2);
-        lcd.print(buffer);
-      } 
-
-      if (found)
-      {
-        switch(key) 
+        for(int x=0; x<16; x++) 
         {
-          case 1:
-                    muxIOConfig[m].defaultState = blnVal; // state_
-                    break;
-          case 2:
-                    //Serial.println(buffer);
-                    muxIOConfig[m].durationSeconds = atoi(buffer); // durationMilli_
-                    break;
-          case 3:
-                    Serial.println(buffer);
-
-                      muxIOConfig[m].output = atoi(buffer); // mux pin
-                    break;
-          case 4:
-                    //Serial.println(buffer);
-                    muxIOConfig[m].servoMin = atoi(buffer); // durationMilli_
-                    break;
-          case 5:
-                    //Serial.println(buffer);
-                    muxIOConfig[m].servoMax = atoi(buffer); // durationMilli_
-                    break;
+          int setting_len = strlen(config_lookup[c]);
+                   
+          
+          memcpy(buf, config_lookup[c], setting_len);
+          itoa(m, &buf[setting_len], 10);      
+          
+          blnVal = false;
+          found = false;
+          #ifdef DEBUGLOADCONFIG
+            Serial.print(buf);
+          #endif
+          //lcd.clear();
+          lcd.setCursor(0, 1);
+          lcd.println(buf);
+    
+          if(c == 0) // BOOL
+          {
+            found = ini.getValue("io", buf, buffer, bufferLen, blnVal);
+            //Serial.print("=");
+            //Serial.println(blnVal);
+            lcd.setCursor(0, 2);
+            lcd.println(blnVal);
+          }
+          else // INT
+          { 
+            found = ini.getValue("io", buf, buffer, bufferLen);
+            #ifdef DEBUGLOADCONFIG
+              Serial.print("=");
+              Serial.println(buffer);
+            #endif
+            lcd.setCursor(0, 2);
+            lcd.print(buffer);
+          } 
+    
+          if (found)
+          {
+            switch(c) 
+            {
+              case 0:
+                        muxIOConfig[m].defaultState = blnVal; // state_
+                        break;
+              case 1:
+                        muxIOConfig[m].durationSeconds = atoi(buffer);
+                        break;
+              case 2:
+                        muxIOConfig[m].outputIO = 200;
+                        break;
+              case 3:
+                        muxIOConfig[m].servoMin = atoi(buffer);
+                        break;
+              case 4:
+                        muxIOConfig[m].servoMax = atoi(buffer);
+                        break;
+            }
+          }
+          m=m+1;
+          
         }
-        
       }
-      m=m+1;
-    }
-  }  
+      delete [] buf;
+  } 
+ delete [] buffer;
+ ini.close(); 
 }
-
-
 
 
