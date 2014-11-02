@@ -81,7 +81,7 @@ typedef struct
 } muxIO;
 muxIO muxIOConfig[32];
 
-#define DEBUGGING
+//#define DEBUGGING
 
 void setup() {
   
