@@ -98,7 +98,8 @@ void setup() {
   Serial.begin(9600);
   
   #ifdef DEBUGGING
-  lcd.print("Type in serial to start");
+  lcd.print("Type serial to start");
+  Serial.println("Type serial to start");
   while (Serial.read() <= 0) {}
   #endif
   
