@@ -21,6 +21,7 @@
 
 #define SD_SELECT 8
 
+#include <EEPROM.h>
 #include <IniFile.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
@@ -42,7 +43,8 @@
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, PIN, NEO_GRB + NEO_KHZ800);
 
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x41);
+Adafruit_PWMServoDriver pwm1 = Adafruit_PWMServoDriver(0x41);
+Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(0x70);
 
 IRrecv irrecv(12);
 decode_results results;
@@ -61,9 +63,13 @@ Adafruit_MCP23017 mcp[2];
 
 typedef struct
 {
-    bool              defaultState = 0;           // Default state of pin 1=on, 0=off
-    bool              currentState = 0;           // Default state of pin 1=on, 0=off
-    int               output = 0;                 // > 0 Mux output pin to drive, < 0 servo to toggle - NOT PIN 31!
+    //bool              enabled = 0;               // if active or not   
+    bool              defaultState = 0;          // Default state of pin 1=on, 0=off
+    bool              currentState = 0;          // Default state of pin 1=on, 0=off
+    byte              output = 0;                // > 0 Mux output pin to drive,  > 32 servo to toggle
+    byte              servoMin = 0;              // 
+    byte              servoMax = 0;              // 
+    //bool              servoSweep = 0;            // if the servo should constantly sweep
     // Seconds to leave output on for.  
     // -1 = input button, 0 means don't auto off, > 0 is a toggle switch, < -1 is a on for once period
     int               durationSeconds;        
@@ -99,7 +105,7 @@ void setup() {
   Serial.begin(9600);
   
   //Serial.println("Type any character to start");
-  while (Serial.read() <= 0) {}
+  //while (Serial.read() <= 0) {}
   
   Wire.begin();
   delay(100);
@@ -114,6 +120,8 @@ void setup() {
   readBoolConfig("state", 0, 1);
   readBoolConfig("sec", 1, 2);
   readBoolConfig("out", 1, 3);
+  readBoolConfig("min", 1, 4);
+  readBoolConfig("max", 1, 5);
   
   // IR
   irrecv.enableIRIn(); // Start the receiver
@@ -136,9 +144,12 @@ void setup() {
   //colorWipe(strip.Color(0, 0, 255), 15); // Blue
   //colorWipe(strip.Color(255, 255, 51), 50); // White White ???
  
-  pwm.begin();
-  pwm.setPWMFreq(1600);  // This is the maximum PWM frequency
-    
+  pwm1.begin();
+  pwm1.setPWMFreq(1600);  // This is the maximum PWM frequency
+  pwm2.begin();
+  pwm2.setPWMFreq(1600);  // This is the maximum PWM frequency
+
+  
   // save I2C bitrate
   uint8_t twbrbackup = TWBR;
   // must be changed after calling Wire.begin() (inside pwm.begin())
@@ -154,7 +165,7 @@ void loop() {
 
     if(results.value == 0x77E110E4)
     {
-      Serial.println("forward");
+      //Serial.println("forward");
       //ir_speed = ir_speed--;
       //set_train(0, ir_train, true, ((ir_speed < 0) ? (ir_speed * -1) : ir_speed)  );
     }
@@ -208,12 +219,34 @@ void setMux()
     {
       //bool state = mcp[y].digitalRead(x);
       
+      // BUTTON
       if(muxIOConfig[m].durationSeconds == -1)
       {
-        mcp[y].pinMode(x, INPUT);
-        mcp[y].pullUp(x, HIGH);
+        if(muxIOConfig[m].onMilli == 0)
+        {
+          mcp[y].pinMode(x, INPUT);
+          mcp[y].pullUp(x, HIGH);
+          muxIOConfig[m].onMilli = 1;
+        }
+        // MOVE SERVO TO POS
+        if(muxIOConfig[m].output > 32)
+        {
+          //Serial.print("m=");
+          //Serial.println(m);
+          //Serial.print("s=");
+          //Serial.println(muxIOConfig[m].servo);
+          if(mcp[y].digitalRead(x))
+          {
+            pwm1.setPWM(muxIOConfig[m-32].output, 0, 150);
+          }
+          else
+          {
+            pwm1.setPWM(muxIOConfig[m-32].output, 0, 600);
+          }
+        }
+        
       }
-      else
+      else // TOGGLE
       {
           mcp[y].pinMode(x, OUTPUT);
           
@@ -235,18 +268,14 @@ void setMux()
           }
           // DOES toggle && not initialised 
           if(muxIOConfig[m].durationSeconds > 0) 
-          { 
-            
-            //Serial.print("toggle found");
-            
+          {            
             if(muxIOConfig[m].onMilli == 0) // initilise
             {
-              muxIOConfig[m].onMilli == 1; // not zero
+              muxIOConfig[m].onMilli = 1; // not zero
               muxIOConfig[m].currentState = (muxIOConfig[m].defaultState ? LOW : HIGH);
             }
             else if(millis() > (muxIOConfig[m].onMilli+(muxIOConfig[m].durationSeconds*1000))) // Expired
             {
-              Serial.println(m);
               mcp[y].digitalWrite(x, (muxIOConfig[m].currentState ? LOW : HIGH)); // toggle // (muxIOConfig[m].defaultState ? LOW : HIGH)
               muxIOConfig[m].currentState = (muxIOConfig[m].currentState ? LOW : HIGH);
               muxIOConfig[m].onMilli = millis(); // reset
@@ -504,16 +533,16 @@ void scanI2C()
 }
 */
 
-SdFat sd;
+
 void readBoolConfig(char setting_name[], int lookup_type, int key) // 0 = bool, 1 = int
 {
  
-  
+  SdFat sd;
   lcd.setCursor(0,0);
   lcd.print("Loading...");
 
   // CONFIG
-  const size_t bufferLen = 80;
+  const size_t bufferLen = 18;
   char buffer[bufferLen];
 
   const char *filename = "/config.txt";
@@ -521,11 +550,11 @@ void readBoolConfig(char setting_name[], int lookup_type, int key) // 0 = bool, 
   SPI.begin();
   if (!sd.begin(SD_SELECT))
     while (1)
-      Serial.println("SD failed");
+      Serial.println("err1");
   
   IniFile ini(filename);
   if (!ini.open()) {
-    Serial.print("config missing");
+    Serial.print("err2");
     // Cannot do anything else
     while (1)
       ;
@@ -534,7 +563,7 @@ void readBoolConfig(char setting_name[], int lookup_type, int key) // 0 = bool, 
   // Check the file is valid. This can be used to warn if any lines
   // are longer than the buffer.
   if (!ini.validate(buffer, bufferLen)) {
-    Serial.print(" not valid: ");
+    Serial.print("err3");
     //printErrorMessage(ini.getError());
     // Cannot do anything else
     //while (1)
@@ -547,9 +576,9 @@ void readBoolConfig(char setting_name[], int lookup_type, int key) // 0 = bool, 
   String setting;
   char buf[30];
   
-  for(int y=(key == 3 ? 1: 0); y<2; y++) 
+  for(int y=0; y<2; y++) 
   {
-    for(int x=0; x<(y== 1 && key == 3 ? 14 : 16); x++) 
+    for(int x=0; x<16; x++) 
     {
       int setting_len = strlen(setting_name);
       memcpy(buf, setting_name, setting_len);
@@ -559,13 +588,13 @@ void readBoolConfig(char setting_name[], int lookup_type, int key) // 0 = bool, 
       found = false;
       
       //Serial.print(buf);
-      lcd.clear();
+      //lcd.clear();
       lcd.setCursor(0, 1);
       lcd.print(buf);
 
       if(lookup_type == 0) // BOOL
       {
-        found = ini.getValue("mux", buf, buffer, bufferLen, blnVal);
+        found = ini.getValue("io", buf, buffer, bufferLen, blnVal);
         //Serial.print("=");
         //Serial.println(blnVal);
         lcd.setCursor(0, 2);
@@ -573,7 +602,7 @@ void readBoolConfig(char setting_name[], int lookup_type, int key) // 0 = bool, 
       }
       else // INT
       { 
-        found = ini.getValue("mux", buf, buffer, bufferLen);
+        found = ini.getValue("io", buf, buffer, bufferLen);
         //Serial.print("=");
         //Serial.println(buffer);
         lcd.setCursor(0, 2);
@@ -592,8 +621,17 @@ void readBoolConfig(char setting_name[], int lookup_type, int key) // 0 = bool, 
                     muxIOConfig[m].durationSeconds = atoi(buffer); // durationMilli_
                     break;
           case 3:
+                    Serial.println(buffer);
+
+                      muxIOConfig[m].output = atoi(buffer); // mux pin
+                    break;
+          case 4:
                     //Serial.println(buffer);
-                    muxIOConfig[m].output = atoi(buffer); // outputMuxPin_
+                    muxIOConfig[m].servoMin = atoi(buffer); // durationMilli_
+                    break;
+          case 5:
+                    //Serial.println(buffer);
+                    muxIOConfig[m].servoMax = atoi(buffer); // durationMilli_
                     break;
         }
         
