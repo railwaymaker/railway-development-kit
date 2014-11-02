@@ -66,7 +66,7 @@ typedef struct
     //bool              enabled = 0;               // if active or not   
     bool              defaultState = 0;          // Default state of pin 1=on, 0=off
     bool              currentState = 0;          // Default state of pin 1=on, 0=off
-    byte              outputIO = 0;                // > 0 Mux output pin to drive, < 0 servo to toggle
+    byte              outputIO = 200;                // > 0 Mux output pin to drive, < 0 servo to toggle
     byte              servoMin = 0;              // 
     byte              servoMax = 0;              // 
     //bool              servoSweep = 0;            // if the servo should constantly sweep
@@ -556,7 +556,7 @@ void getSDline() {
   String key;
   String val;
   
-  const int line_buffer_size = 18;
+  const byte line_buffer_size = 16;
   char buffer[line_buffer_size];
   ifstream sdin("config.txt");
   int line_number = 0;
@@ -593,8 +593,8 @@ void getSDline() {
         if(s.substring(0,s.indexOf("=")-3) == "sec")
           muxIOConfig[m].durationSeconds = v; 
         
-        //if(s.substring(0,s.indexOf("=")-3) == "out")
-        //  muxIOConfig[m].outputIO = v;
+        if(s.substring(0,s.indexOf("=")-3) == "out")
+          muxIOConfig[m].outputIO = v;
          
         //if(s.substring(0,s.indexOf("=")-3) == "min")
         //  muxIOConfig[m].servoMin = s.substring(s.indexOf("=")+2,s.length()).toInt(); 
