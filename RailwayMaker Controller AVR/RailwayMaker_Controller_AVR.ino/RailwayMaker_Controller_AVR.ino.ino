@@ -15,14 +15,9 @@
  * GNU General Public License for more details.
  *
  */
-#include <SPI.h>
+//#include <SPI.h>
 #include <SdFat.h>
-
-
-#define SD_SELECT 8
-
 //#include <EEPROM.h>
-#include <IniFile.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <IRremote.h>
@@ -31,6 +26,11 @@
 #include <Adafruit_PWMServoDriver.h>
 
 
+const uint8_t chipSelect = 8;
+SdFat sd;
+
+// create a serial stream
+//ArduinoOutStream cout(Serial);
 
 
 #define PIN 4 // NEOPIXEL Pin num
@@ -89,7 +89,7 @@ typedef struct
 } servoPWM;
 servoPWM servoConfig[32]; 
 */
-SdFat sd;
+
 void setup() {
   
   // Neopixels
@@ -115,15 +115,15 @@ void setup() {
   // for devices which have not yet been configured.
   lcd.setCursor(0,0);
   lcd.print("Loading...");
-  pinMode(SD_SELECT, OUTPUT);
-  digitalWrite(SD_SELECT, HIGH); // disable SD card
-  SPI.begin();
-  if (!sd.begin(SD_SELECT))
-    while (1)
-      Serial.println("err1");
-      
-  delay(300);
-  readConfig();
+  delay(400);  // catch Due reset problem
+
+  // initialize the SD card at SPI_HALF_SPEED to avoid bus errors with
+  // breadboards.  use SPI_FULL_SPEED for better performance.
+  if (!sd.begin(chipSelect, SPI_HALF_SPEED)) sd.initErrorHalt();
+
+  // run the example
+  getSDline();
+  //cout << "\nDone!\n";
   
   // IR
   irrecv.enableIRIn(); // Start the receiver
@@ -278,19 +278,19 @@ void setMux()
           // DOES toggle && not initialised 
           if(muxIOConfig[m].durationSeconds > 0) 
           {            
-            /*
-            Serial.println(m);
-            Serial.println(muxIOConfig[m].onMilli);
+            
+            //Serial.println(m);
+            //Serial.println(muxIOConfig[m].onMilli);
             
             if(muxIOConfig[m].onMilli == 0) // initilise
             {
-              Serial.println("i");
-              //muxIOConfig[m].onMilli = 1; // not zero
+              //Serial.println("i");
+              muxIOConfig[m].onMilli = 1; // not zero
               muxIOConfig[m].currentState = (muxIOConfig[m].defaultState ? LOW : HIGH);
             }
             else if(millis() > (muxIOConfig[m].onMilli+(muxIOConfig[m].durationSeconds*1000))) // Expired
             {
-              Serial.println("e");
+              //Serial.println("e");
               mcp[y].digitalWrite(x, (muxIOConfig[m].currentState ? LOW : HIGH)); // toggle // (muxIOConfig[m].defaultState ? LOW : HIGH)
               muxIOConfig[m].currentState = (muxIOConfig[m].currentState ? LOW : HIGH);
               muxIOConfig[m].onMilli = millis(); // reset
@@ -299,7 +299,7 @@ void setMux()
             {
               mcp[y].digitalWrite(x,(muxIOConfig[m].currentState ? HIGH : LOW));
             }
-            */
+            
           }
       }
       m=m+1;
@@ -549,116 +549,57 @@ void scanI2C()
 }
 */
 
-#define DEBUGLOADCONFIG
+//#define DEBUGLOADCONFIG
 
-void readConfig() 
-{
-  // CONFIG
-  const char *filename = "/config.txt";
+void getSDline() {
   
-  IniFile ini(filename);
+  String key;
+  String val;
+  
+  const int line_buffer_size = 18;
+  char buffer[line_buffer_size];
+  ifstream sdin("config.txt");
+  int line_number = 0;
 
-  if (!ini.open()) {
-    Serial.print("err2");
-    // Cannot do anything else
-    while (1)
-      ;
-  }
-
-  // Check the file is valid. This can be used to warn if any lines
-  // are longer than the buffer.
-  /*
-  if (!ini.validate(buffer, bufferLen)) {
-    Serial.print("err3");
-    //printErrorMessage(ini.getError());
-    // Cannot do anything else
-    //while (1)
-    //  ;
-  }
-  */
-  
-  
-  const size_t bufferLen = 30;
-  char buffer[bufferLen];
-  
-  const char config_lookup[5][6] = { "state", "sec", "out", "min", "max" };
-  for(int c=0; c < sizeof(config_lookup); c++)
-  { 
-   
-    bool blnVal; 
-    bool found;
-    int m = 1; // mux to 32
-
-    char buf[30];
-    
-    
-    for(int y=0; y<2; y++) 
+  while (sdin.getline(buffer, line_buffer_size, '\n') || sdin.gcount()) {
+    int count = sdin.gcount();
+    if (sdin.fail()) {
+      //cout << "Partial long line";
+      sdin.clear(sdin.rdstate() & ~ios_base::failbit);
+    } else if (sdin.eof()) {
+      //cout << "Partial final line";  // sdin.fail() is false
+    } else {
+      count--;  // Don’t include newline in count
+      //cout << "Line " << ++line_number;
+    }
+    //cout << " (" << count << " chars): " << buffer << endl;
+    String s = String(buffer);
+    if(s.indexOf("=")>0)
     {
-        for(int x=0; x<16; x++) 
-        {
-          int setting_len = strlen(config_lookup[c]);
-                   
-          
-          memcpy(buf, config_lookup[c], setting_len);
-          itoa(m, &buf[setting_len], 10);      
-          
-          blnVal = false;
-          found = false;
-          #ifdef DEBUGLOADCONFIG
-            Serial.print(buf);
-          #endif
-          //lcd.clear();
-          lcd.setCursor(0, 1);
-          lcd.println(buf);
-    
-          if(c == 0) // BOOL
-          {
-            found = ini.getValue("io", buf, buffer, bufferLen, blnVal);
-            //Serial.print("=");
-            //Serial.println(blnVal);
-            lcd.setCursor(0, 2);
-            lcd.println(blnVal);
-          }
-          else // INT
-          { 
-            found = ini.getValue("io", buf, buffer, bufferLen);
-            #ifdef DEBUGLOADCONFIG
-              Serial.print("=");
-              Serial.println(buffer);
-            #endif
-            lcd.setCursor(0, 2);
-            lcd.print(buffer);
-          } 
-    
-          if (found)
-          {
-            switch(c) 
-            {
-              case 0:
-                        muxIOConfig[m].defaultState = blnVal; // state_
-                        break;
-              case 1:
-                        muxIOConfig[m].durationSeconds = atoi(buffer);
-                        break;
-              case 2:
-                        muxIOConfig[m].outputIO = 200;
-                        break;
-              case 3:
-                        muxIOConfig[m].servoMin = atoi(buffer);
-                        break;
-              case 4:
-                        muxIOConfig[m].servoMax = atoi(buffer);
-                        break;
-            }
-          }
-          m=m+1;
-          
-        }
-      }
-      delete [] buf;
-  } 
- delete [] buffer;
- ini.close(); 
+        #ifdef DEBUGLOADCONFIG
+          Serial.print( s.substring(0,s.indexOf("=")-3) );
+          Serial.print("^");
+          Serial.print( (s.substring(s.substring(0,s.indexOf("=")-3).length(),s.indexOf("=")-1)) );
+          Serial.print("^");
+          Serial.println( s.substring(s.indexOf("=")+2,s.length()) );
+        #endif
+        
+        byte m = (s.substring(s.substring(0,s.indexOf("=")-3).length(),s.indexOf("=")-1)).toInt();
+        int v = s.substring(s.indexOf("=")+2,s.length()).toInt();
+      
+        if(s.substring(0,s.indexOf("=")-3) == "state")
+          muxIOConfig[m].defaultState = v; // state_
+        
+        if(s.substring(0,s.indexOf("=")-3) == "sec")
+          muxIOConfig[m].durationSeconds = v; 
+        
+        //if(s.substring(0,s.indexOf("=")-3) == "out")
+        //  muxIOConfig[m].outputIO = v;
+         
+        //if(s.substring(0,s.indexOf("=")-3) == "min")
+        //  muxIOConfig[m].servoMin = s.substring(s.indexOf("=")+2,s.length()).toInt(); 
+        //if(s.substring(0,s.indexOf("=")-3) == "max")
+        //  muxIOConfig[m].servoMax = s.substring(s.indexOf("=")+2,s.length()).toInt();
+    }   
+  }
 }
-
-
