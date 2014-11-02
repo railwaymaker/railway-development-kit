@@ -104,8 +104,8 @@ void setup() {
   // Configure all of the SPI select pins as outputs and make SPI
   // devices inactive, otherwise the earlier init routines may fail
   // for devices which have not yet been configured.
-  lcd.setCursor(0,0);
-  lcd.print("Loading...");
+  //lcd.setCursor(0,0);
+  //lcd.print("Loading...");
   delay(400);  // catch Due reset problem
 
   // initialize the SD card at SPI_HALF_SPEED to avoid bus errors with
@@ -240,19 +240,19 @@ void setMux()
         if(muxIOConfig[m].outputIO > 32)
         {
           
-          Serial.print("i=");
-          Serial.println(m);
-          Serial.print("s=");
-          Serial.println(muxIOConfig[m].outputIO-32);
+          //Serial.print("i=");
+          //Serial.println(m);
+          //Serial.print("s=");
+          //Serial.println(muxIOConfig[m].outputIO-32);
                             
           if(mcp[y].digitalRead(x))
           {
-            Serial.println("x");
+            //Serial.println("x");
             pwm1.setPWM(1, 0, 150);
           }
           else
           {
-            Serial.println("y");
+            //Serial.println("y");
             pwm1.setPWM(1, 0, 550);
           }
           
@@ -598,8 +598,8 @@ void getSDline() {
         if(s.substring(0,s.indexOf("=")-3) == "sec")
           muxIOConfig[m].durationSeconds = v; 
         
-        //if(s.substring(0,s.indexOf("=")-3) == "out")
-        //  muxIOConfig[m].outputIO = v;
+        if(s.substring(0,s.indexOf("=")-3) == "out")
+          muxIOConfig[m].outputIO = v;
          
         //if(s.substring(0,s.indexOf("=")-3) == "min")
         //  muxIOConfig[m].servoMin = s.substring(s.indexOf("=")+2,s.length()).toInt(); 
