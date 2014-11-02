@@ -44,7 +44,10 @@ SdFat sd;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, PIN, NEO_GRB + NEO_KHZ800);
 
 Adafruit_PWMServoDriver pwm1 = Adafruit_PWMServoDriver(0x41);
-Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(0x70);
+//Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(0x70);
+#define SERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
+#define SERVOMAX  600 // this is the 'maximum' pulse length count (out of 4096)
+
 
 IRrecv irrecv(12);
 decode_results results;
@@ -66,7 +69,7 @@ typedef struct
     //bool              enabled = 0;               // if active or not   
     bool              defaultState = 0;          // Default state of pin 1=on, 0=off
     bool              currentState = 0;          // Default state of pin 1=on, 0=off
-    byte              outputIO = 200;                // > 0 Mux output pin to drive, < 0 servo to toggle
+    byte              outputIO = 49;                // > 0 Mux output pin to drive, < 0 servo to toggle
     byte              servoMin = 0;              // 
     byte              servoMax = 0;              // 
     //bool              servoSweep = 0;            // if the servo should constantly sweep
@@ -77,18 +80,6 @@ typedef struct
     unsigned long     onMilli = 0;            // Used internally for timing if flasher
 } muxIO;
 muxIO muxIOConfig[32];
-
-/*
-typedef struct
-{
-    int               offPos;                  // Default position
-    int               onPos;                   // Default position    
-    byte              sweepSpeed;              // Speed servo moves
-    bool              isConstantSweep;         // Allows the servo to constantly sweep back and forth rather than toggle
-    
-} servoPWM;
-servoPWM servoConfig[32]; 
-*/
 
 void setup() {
   
@@ -147,10 +138,18 @@ void setup() {
   //colorWipe(strip.Color(255, 255, 51), 50); // White White ???
  
   pwm1.begin();
-  pwm1.setPWMFreq(1600);  // This is the maximum PWM frequency
-  pwm2.begin();
-  pwm2.setPWMFreq(1600);  // This is the maximum PWM frequency
+  pwm1.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
+  //pwm2.begin();
+  //pwm2.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
 
+  for (uint16_t pulselen = SERVOMIN; pulselen < SERVOMAX; pulselen++) {
+    pwm1.setPWM(1, 0, pulselen);
+  }
+  delay(500);
+  for (uint16_t pulselen = SERVOMAX; pulselen > SERVOMIN; pulselen--) {
+    pwm1.setPWM(1, 0, pulselen);
+  }
+  delay(500);  
   
   // save I2C bitrate
   uint8_t twbrbackup = TWBR;
@@ -227,32 +226,35 @@ void setMux()
       // BUTTON
       if(muxIOConfig[m].durationSeconds == -1)
       {
-        //if(muxIOConfig[m].onMilli == 0)
-        //{
+        if(muxIOConfig[m].onMilli == 0)
+        {
           mcp[y].pinMode(x, INPUT);
           mcp[y].pullUp(x, HIGH);
           //muxIOConfig[m].onMilli = 1;
-        //}
+        }
         // MOVE SERVO TO POS
-        /*
+        
         if(muxIOConfig[m].outputIO > 32)
         {
           
-          //Serial.print("m=");
-          //Serial.println(m-32);
-          //Serial.print("s=");
-          //Serial.println(muxIOConfig[m].outputIO);
+          Serial.print("i=");
+          Serial.println(m);
+          Serial.print("s=");
+          Serial.println(muxIOConfig[m].outputIO-32);
+                            
           if(mcp[y].digitalRead(x))
           {
-            pwm1.setPWM(muxIOConfig[m-32].outputIO, 0, 150);
+            Serial.println("x");
+            pwm1.setPWM(1, 0, 150);
           }
           else
           {
-            pwm1.setPWM(muxIOConfig[m-32].outputIO, 0, 600);
+            Serial.println("y");
+            pwm1.setPWM(1, 0, 550);
           }
           
         }
-        */
+        
         
       }
       else // TOGGLE
@@ -593,8 +595,8 @@ void getSDline() {
         if(s.substring(0,s.indexOf("=")-3) == "sec")
           muxIOConfig[m].durationSeconds = v; 
         
-        if(s.substring(0,s.indexOf("=")-3) == "out")
-          muxIOConfig[m].outputIO = v;
+        //if(s.substring(0,s.indexOf("=")-3) == "out" && m > 16)
+        //  muxIOConfig[m].outputIO = v;
          
         //if(s.substring(0,s.indexOf("=")-3) == "min")
         //  muxIOConfig[m].servoMin = s.substring(s.indexOf("=")+2,s.length()).toInt(); 
@@ -603,3 +605,4 @@ void getSDline() {
     }   
   }
 }
+
