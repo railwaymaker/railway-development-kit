@@ -136,7 +136,7 @@ max19 = 90
 sweep19 = 0
 
 state20 = 1
-out20 = 0
+out20 = 49
 sec20 = -1
 min20 = 0
 max20 = 90

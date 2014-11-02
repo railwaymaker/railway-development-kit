@@ -69,7 +69,7 @@ typedef struct
     //bool              enabled = 0;               // if active or not   
     bool              defaultState = 0;          // Default state of pin 1=on, 0=off
     bool              currentState = 0;          // Default state of pin 1=on, 0=off
-    byte              outputIO = 49;                // > 0 Mux output pin to drive, < 0 servo to toggle
+    byte              outputIO = 0;                // > 0 Mux output pin to drive, < 0 servo to toggle
     byte              servoMin = 0;              // 
     byte              servoMax = 0;              // 
     //bool              servoSweep = 0;            // if the servo should constantly sweep
@@ -80,6 +80,8 @@ typedef struct
     unsigned long     onMilli = 0;            // Used internally for timing if flasher
 } muxIO;
 muxIO muxIOConfig[32];
+
+#define DEBUGGING
 
 void setup() {
   
@@ -95,8 +97,10 @@ void setup() {
   
   Serial.begin(9600);
   
-  lcd.print("Type");
+  #ifdef DEBUGGING
+  lcd.print("Type in serial to start");
   while (Serial.read() <= 0) {}
+  #endif
   
   Wire.begin();
   delay(100);
@@ -114,19 +118,15 @@ void setup() {
 
   // run the example
   getSDline();
-  Serial.println("h3");
-  //cout << "\nDone!\n";
   
   // IR
   irrecv.enableIRIn(); // Start the receiver
   
-  Serial.println("h4");
   // DEBUG
   //scanI2C();
 
   delay(200);
-  //lcd.clear();
-  Serial.println("h5");
+  lcd.clear();
     
   //MUX
   //setMux();
@@ -218,9 +218,11 @@ void loop() {
   setMux();
 }
 
+//#define DEBUGSERVOTOGGLE
+
 void setMux()
 {
-  int m = 1; // mux to 32
+  int m = 0; // mux to 32
   for(int y=0; y<2; y++) 
   {
     mcp[y] = Adafruit_MCP23017();
@@ -228,26 +230,36 @@ void setMux()
     for(int x=0; x<16; x++) 
     {
       //bool state = mcp[y].digitalRead(x);
-      
+        #ifdef DEBUGSERVOTOGGLE
+          //Serial.print("mux=");
+          //Serial.println(m);
+          //Serial.print("secs=");
+          //Serial.println(muxIOConfig[m].durationSeconds);
+        #endif  
       // BUTTON
       if(muxIOConfig[m].durationSeconds == -1)
       {
+        #ifdef DEBUGSERVOTOGGLE
+          //Serial.print("onmilli=");
+          //Serial.println(muxIOConfig[m].onMilli);
+        #endif  
+
         if(muxIOConfig[m].onMilli == 0)
         {
           mcp[y].pinMode(x, INPUT);
           mcp[y].pullUp(x, HIGH);
-          //muxIOConfig[m].onMilli = 1;
+          muxIOConfig[m].onMilli = 1; // Initialised = not zero!
         }
         // MOVE SERVO TO POS
         
         if(muxIOConfig[m].outputIO > 32)
         {
-          
-          //Serial.print("i=");
-          //Serial.println(m);
-          //Serial.print("s=");
-          //Serial.println(muxIOConfig[m].outputIO-32);
-                            
+          #ifdef DEBUGSERVOTOGGLE
+            Serial.print("i="); // mux in
+            Serial.println(m+1); // add one when displaying - zero index
+            Serial.print("s="); // servo out
+            Serial.println(muxIOConfig[m].outputIO-32);
+          #endif               
           if(mcp[y].digitalRead(x))
           {
             //Serial.println("x");
@@ -322,9 +334,7 @@ void muxStatus()
   {
     for(int x=0; x<16; x++) 
     {
-      Serial.println("h6");
       lcd.setCursor(x, y+2);
-        Serial.println("h7");
       lcd.print(mcp[y].digitalRead(x));      
       m=m+1;
     }
@@ -559,7 +569,7 @@ void scanI2C()
 }
 */
 
-#define DEBUGLOADCONFIG
+//#define DEBUGLOADCONFIG
 
 void getSDline() {
   
@@ -586,34 +596,60 @@ void getSDline() {
     //cout << " (" << count << " chars): " << buffer << endl;
     String s = String(buffer);
     if(s.indexOf("=")>0)
-    {
-        #ifdef DEBUGLOADCONFIG
-          Serial.print( s.substring(0,s.indexOf("=")-3) );
-          Serial.print("^");
-          Serial.print( (s.substring(s.substring(0,s.indexOf("=")-3).length(),s.indexOf("=")-1)) );
-          Serial.print("^");
-          Serial.println( s.substring(s.indexOf("=")+2,s.length()) );
-        #endif
-        
-        byte m = (s.substring(s.substring(0,s.indexOf("=")-3).length(),s.indexOf("=")-1)).toInt();
-        int v = s.substring(s.indexOf("=")+2,s.length()).toInt();
-      
-        if(s.substring(0,s.indexOf("=")-3) == "state")
-          muxIOConfig[m].defaultState = v; // state_
-        
-        if(s.substring(0,s.indexOf("=")-3) == "sec")
-          muxIOConfig[m].durationSeconds = v; 
-        
-        if(s.substring(0,s.indexOf("=")-3) == "out")
-          muxIOConfig[m].outputIO = v;
-         
-        //if(s.substring(0,s.indexOf("=")-3) == "min")
-        //  muxIOConfig[m].servoMin = s.substring(s.indexOf("=")+2,s.length()).toInt(); 
-        //if(s.substring(0,s.indexOf("=")-3) == "max")
-        //  muxIOConfig[m].servoMax = s.substring(s.indexOf("=")+2,s.length()).toInt();
+    { 
+        char* equ = strchr(buffer, '=');
+        if((int)equ>6) 
+        {
+          byte m = atoi(equ-3)-1; // zero index but config isn't
+          int v = atoi(equ+1);
+       
+          if(m<32) 
+          {
+            if(memcmp(buffer, "state", 5) == 0)
+            {
+              #ifdef DEBUGLOADCONFIG
+                Serial.print("state");
+              #endif
+              muxIOConfig[m].defaultState = v;
+            }
+            if(memcmp(buffer, "sec", 3) == 0)
+            {
+              #ifdef DEBUGLOADCONFIG
+                Serial.print("sec");
+              #endif
+              muxIOConfig[m].durationSeconds = v;
+            }
+            if(memcmp(buffer, "out", 3) == 0)
+            {
+              #ifdef DEBUGLOADCONFIG
+                Serial.print("out");
+              #endif
+              muxIOConfig[m].outputIO = v;
+            }
+            if(memcmp(buffer, "min", 3) == 0)
+            {
+              #ifdef DEBUGLOADCONFIG
+                Serial.print("min");
+              #endif
+              muxIOConfig[m].servoMin = v;
+            }
+            if(memcmp(buffer, "max", 3) == 0)
+            {
+              #ifdef DEBUGLOADCONFIG
+                Serial.print("max");
+              #endif
+              muxIOConfig[m].servoMin = v;
+            }
+  
+            #ifdef DEBUGLOADCONFIG
+              Serial.print("^");
+              Serial.print( m );
+              Serial.print("^");
+              Serial.println( v );
+            #endif
+          }
+        }
     }   
-    Serial.println("h1");
   }
-    Serial.println("h2");
 }
 
