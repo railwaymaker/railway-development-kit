@@ -114,17 +114,20 @@ void setup() {
 
   // run the example
   getSDline();
+  Serial.println("h3");
   //cout << "\nDone!\n";
   
   // IR
   irrecv.enableIRIn(); // Start the receiver
-    
+  
+  Serial.println("h4");
   // DEBUG
   //scanI2C();
 
   delay(200);
-  lcd.clear();
-  
+  //lcd.clear();
+  Serial.println("h5");
+    
   //MUX
   //setMux();
   
@@ -319,7 +322,9 @@ void muxStatus()
   {
     for(int x=0; x<16; x++) 
     {
+      Serial.println("h6");
       lcd.setCursor(x, y+2);
+        Serial.println("h7");
       lcd.print(mcp[y].digitalRead(x));      
       m=m+1;
     }
@@ -554,7 +559,7 @@ void scanI2C()
 }
 */
 
-//#define DEBUGLOADCONFIG
+#define DEBUGLOADCONFIG
 
 void getSDline() {
   
@@ -570,6 +575,7 @@ void getSDline() {
     int count = sdin.gcount();
     if (sdin.fail()) {
       //cout << "Partial long line";
+      Serial.println("Line fail");
       sdin.clear(sdin.rdstate() & ~ios_base::failbit);
     } else if (sdin.eof()) {
       //cout << "Partial final line";  // sdin.fail() is false
@@ -606,6 +612,8 @@ void getSDline() {
         //if(s.substring(0,s.indexOf("=")-3) == "max")
         //  muxIOConfig[m].servoMax = s.substring(s.indexOf("=")+2,s.length()).toInt();
     }   
+    Serial.println("h1");
   }
+    Serial.println("h2");
 }
 
