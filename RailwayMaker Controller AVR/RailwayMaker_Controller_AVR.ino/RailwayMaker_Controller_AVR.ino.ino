@@ -95,7 +95,7 @@ void setup() {
   lcd.clear();
   lcd.backlight(); // finish with backlight on  
   
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   #ifdef DEBUGGING
   lcd.print("Type serial to start");
@@ -176,42 +176,42 @@ void loop() {
 
     //Serial.println(results.value, HEX);
 
-    if(results.value == 0x77E110E4)
+    if(results.value == 0x677A7AF6)
     {
-      Serial.println("forward");
-      set_train(0, 3, true, 10);
+      Serial.println("f");
+      set_train(0, 3, true, 15);
       //set_train(0, ir_train, true, ((ir_speed < 0) ? (ir_speed * -1) : ir_speed)  );
     }
-    if(results.value == 0x77E1E0E4)
+    if(results.value == 0x5C0436C)
     {
-      Serial.println("backward");
-      set_train(0, 3, true, -10);
+      Serial.println("b");
+      set_train(0, 3, true, -15);
       //ir_speed = ir_speed++;
       //set_train(0, ir_train, ((ir_speed == 0) ? true : false), ((ir_speed < 0) ? (ir_speed * -1) : ir_speed)  );
     }
-    else if(results.value == 0x77E1D0E4)
+    else if(results.value == 0x5B36F4B4)
     {
       //Serial.println("up");
       //ir_train = ir_train++;
     }  
-    else if(results.value == 0x77E1B0E4)
+    else if(results.value == 0xD2103958)
     {
       //Serial.println("down");
       //ir_train = ir_train--;
     } 
-    else if(results.value == 0x77E17AE4)
+    else if(results.value == 0x14A4550C)
     {
       //Serial.println("play"); // can be the same as middle...
-      //set_train(0, 3, true, 0);
-    }   
-    else if(results.value == 0x77E120E4)
-    {
-      Serial.println("middle");
       set_train(0, 3, true, 0);
+    }   
+    else if(results.value == 0x80A2721E)
+    {
+      Serial.println("m");
+      //set_train(0, 3, true, 0);
       //ir_speed = 0;
       //set_train(0, ir_train, false, ir_speed );
     }  
-    else if(results.value == 0x77E140E4)
+    else if(results.value == 0x14A4550C)
     {
       //Serial.println("menu");
     }
@@ -344,6 +344,7 @@ void muxStatus()
     }
   }
 }
+
 
 void set_train(uint8_t track, uint8_t train, bool forwards, uint8_t speed) {
 
@@ -510,6 +511,8 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
   }
 
 }
+
+
 
 // Fill the dots one after the other with a color
 
