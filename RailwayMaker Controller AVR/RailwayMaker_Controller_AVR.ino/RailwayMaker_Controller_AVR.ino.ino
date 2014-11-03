@@ -167,8 +167,10 @@ void setup() {
 
 void loop() {
   
-  colorWipe(strip.Color(255, 0, 0), 1);
-  colorWipe(strip.Color(255, 255, 0), 1);
+  //colorWipe(strip.Color(255, 0, 0), 1);
+  //colorWipe(strip.Color(255, 255, 0), 1);
+  
+  Serial.println("xxx");
   
   if (irrecv.decode(&results)) {
 
@@ -176,13 +178,14 @@ void loop() {
 
     if(results.value == 0x77E110E4)
     {
-      //Serial.println("forward");
-      //ir_speed = ir_speed--;
+      Serial.println("forward");
+      set_train(0, 3, true, 10);
       //set_train(0, ir_train, true, ((ir_speed < 0) ? (ir_speed * -1) : ir_speed)  );
     }
     if(results.value == 0x77E1E0E4)
     {
-      //Serial.println("backward");
+      Serial.println("backward");
+      set_train(0, 3, true, -10);
       //ir_speed = ir_speed++;
       //set_train(0, ir_train, ((ir_speed == 0) ? true : false), ((ir_speed < 0) ? (ir_speed * -1) : ir_speed)  );
     }
@@ -203,8 +206,8 @@ void loop() {
     }   
     else if(results.value == 0x77E120E4)
     {
-      //Serial.println("middle");
- 
+      Serial.println("middle");
+      set_train(0, 3, true, 0);
       //ir_speed = 0;
       //set_train(0, ir_train, false, ir_speed );
     }  
@@ -390,30 +393,30 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 
   Wire.beginTransmission(DCC);
 
-  //Serial.print(" Sending: ");
+  Serial.print(" Sending: ");
 
   Wire.write(rawcmd);
 
-  //Serial.print(rawcmd, BIN);
+  Serial.print(rawcmd, BIN);
 
-  //Serial.print(", ");
+  Serial.print(", ");
 
   Wire.write(address);
 
-  //Serial.print(address, BIN);
+  Serial.print(address, BIN);
 
-  //Serial.print(", ");
+  Serial.print(", ");
 
   Wire.write(dcc);
 
-  //Serial.print(dcc, BIN);
+  Serial.print(dcc, BIN);
 
-  //Serial.print(", ");
+  Serial.print(", ");
 
   Wire.write(rawcmd ^ address ^ dcc);
 
-  //Serial.println(rawcmd ^ address ^ dcc, BIN);
-/*
+  Serial.println(rawcmd ^ address ^ dcc, BIN);
+
   switch(Wire.endTransmission()) {
 
     case 0: //success
@@ -448,9 +451,9 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 
   if(ret != 2) {
 
-      //Serial.print(" I2C err:");
+      Serial.print(" I2C didn't reply with two status bytes, bytes read:");
 
-      //Serial.println(ret);
+      Serial.println(ret);
 
   } else {
 
@@ -460,13 +463,13 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 
     if(a != ~b) {
 
-      //Serial.print(" Slave reply failed checksum:");
+      Serial.print(" Slave reply failed checksum:");
 
-      //Serial.print(a);
+      Serial.print(a);
 
-      //Serial.print("!=");
+      Serial.print("!=");
 
-      //Serial.println(~b);
+      Serial.println(~b);
 
     } else {
 
@@ -505,7 +508,7 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
     }
 
   }
-*/
+
 }
 
 // Fill the dots one after the other with a color
