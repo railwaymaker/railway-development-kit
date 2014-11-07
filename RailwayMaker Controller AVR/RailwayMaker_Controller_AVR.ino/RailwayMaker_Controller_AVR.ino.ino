@@ -460,9 +460,9 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 
     uint8_t a = Wire.read();
 
-    uint8_t b = Wire.read();
+    uint8_t b = Wire.read();    
 
-    if(a != ~b) {
+    if(a != (    uint8_t)~b) {
 
       Serial.print(" Slave reply failed checksum:");
 
@@ -470,7 +470,7 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 
       Serial.print("!=");
 
-      Serial.println(~b);
+      Serial.println((uint8_t)~b);
 
     } else {
 
@@ -511,7 +511,6 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
   }
 
 }
-
 
 
 // Fill the dots one after the other with a color
