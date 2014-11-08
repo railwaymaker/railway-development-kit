@@ -59,6 +59,8 @@ decode_results results;
 //LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // 2 Line
 LiquidCrystal_I2C lcd(0x20, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);    // 4 Line
 
+#define HWB !(PINE && (1<<2))
+
 
 #define DCC 0x01
 
@@ -84,7 +86,10 @@ muxIO muxIOConfig[32];
 //#define DEBUGGING
 
 void setup() {
-  
+
+  // Initialize the hwb Button 
+  PORTE |= 1<<2;
+
   // Neopixels
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
@@ -160,17 +165,21 @@ void setup() {
   // must be changed after calling Wire.begin() (inside pwm.begin())
   TWBR = 12; // upgrade to 400KHz!
   
-  
+
+
   set_train(0, 3, true, 0);
   
 }
+
+byte train_active = 0;
+byte train_addresses[4] = {3,1,3,1};
+byte train_speed[4] = {0,0,0,0};
+bool train_direction[4] = {true,true,true,true};
 
 void loop() {
   
   //colorWipe(strip.Color(255, 0, 0), 1);
   //colorWipe(strip.Color(255, 255, 0), 1);
-  
-  Serial.println("xxx");
   
   if (irrecv.decode(&results)) {
 
@@ -179,41 +188,53 @@ void loop() {
     if(results.value == 0x677A7AF6)
     {
       Serial.println("f");
-      set_train(0, 3, true, 15);
-      //set_train(0, ir_train, true, ((ir_speed < 0) ? (ir_speed * -1) : ir_speed)  );
+      train_direction[train_active] = false;
+      set_train(0, train_addresses[train_active], train_direction[train_active],  train_speed[train_active]);
     }
     if(results.value == 0x5C0436C)
     {
       Serial.println("b");
-      set_train(0, 3, true, -15);
-      //ir_speed = ir_speed++;
-      //set_train(0, ir_train, ((ir_speed == 0) ? true : false), ((ir_speed < 0) ? (ir_speed * -1) : ir_speed)  );
+      train_direction[train_active] = true;
+      set_train(0, train_addresses[train_active], train_direction[train_active],  train_speed[train_active]);
     }
     else if(results.value == 0x5B36F4B4)
     {
       //Serial.println("up");
-      //ir_train = ir_train++;
+      train_speed[train_active] = train_speed[train_active] + 1;
+      if(train_speed[train_active] >= 33)
+        train_speed[train_active] = 33;
+      set_train(0, train_addresses[train_active], train_direction[train_active],  train_speed[train_active]);
     }  
     else if(results.value == 0xD2103958)
     {
       //Serial.println("down");
-      //ir_train = ir_train--;
+      train_speed[train_active] = train_speed[train_active] - 1;
+      if(train_speed[train_active] <= 0)
+        train_speed[train_active] = 0;
+      
+      set_train(0, train_addresses[train_active], train_direction[train_active], 7);
     } 
-    else if(results.value == 0x14A4550C)
+    else if(results.value == 0x9F5D3A9A) // 9F5D3A9A 64370950
     {
       //Serial.println("play"); // can be the same as middle...
-      set_train(0, 3, true, 0);
+      set_train(0, train_addresses[train_active], train_direction[train_active],  0);
     }   
-    else if(results.value == 0x80A2721E)
+    else if(results.value == 0x80A2721E) // 80A2721E 64370950
+
     {
       Serial.println("m");
+      train_speed[train_active] = 0;
+      set_train(0, 3, train_direction[train_active],  train_speed[train_active]);
       //set_train(0, 3, true, 0);
       //ir_speed = 0;
       //set_train(0, ir_train, false, ir_speed );
     }  
-    else if(results.value == 0x14A4550C)
+    else if(results.value == 0x14A4550C) 
     {
       //Serial.println("menu");
+      train_active = train_active +1;
+      if(train_active > 3)
+        train_active = 0;  
     }
     irrecv.resume(); // Receive the next value
   }
@@ -224,8 +245,91 @@ void loop() {
 
 //#define DEBUGSERVOTOGGLE
 
+unsigned long train_blink = 0;
 void setMux()
 {
+  //lcd.clear();
+  
+  if( HWB )
+  {
+    lcd.setCursor(0, 0);
+    lcd.print("Servo: "); 
+
+    // apply the calibration to the sensor reading
+    int sensorValue = map(analogRead(A4), 0, 1023, 1, 32);
+    
+    lcd.setCursor(9, 0);
+    if(sensorValue < 10)
+      lcd.print( " " );
+    lcd.print( sensorValue );
+  
+    sensorValue = map(analogRead(A5), 0, 1023, 150, 550);
+    pwm1.setPWM(1, 0, sensorValue);
+    lcd.setCursor(0, 1);
+    lcd.print("Position: ");
+    if(sensorValue < 10)
+      lcd.print( " " );
+    lcd.print( sensorValue );  
+    Serial.print(sensorValue);
+    delay(500);
+    
+    
+  }
+  else
+  {
+    lcd.setCursor(0, 0);
+    if( (millis() > (train_blink + 1000) ) && train_active == 0)
+    {
+      lcd.print("    ");  
+      train_blink = millis();
+    }
+    else
+    {
+      lcd.print("T1: ");
+    }
+    lcd.print(train_speed[0]);
+    lcd.print(" ");
+    
+    lcd.setCursor(10, 0);
+    if( (millis() > (train_blink + 1000) ) && train_active == 1)
+    {
+      lcd.print("    ");  
+      train_blink = millis();
+    }
+    else
+    {
+      lcd.print("T2: ");
+    }
+    lcd.print(train_speed[1]);
+    lcd.print(" ");
+    
+    lcd.setCursor(0, 1);
+    if( (millis() > (train_blink + 1000) ) && train_active == 2)
+    {
+      lcd.print("    ");  
+      train_blink = millis();
+    }
+    else
+    {
+      lcd.print("T3: ");
+    }
+    lcd.print(train_speed[2]);
+    lcd.print(" ");
+    
+    lcd.setCursor(10, 1);
+    if( (millis() > (train_blink + 1000) ) && train_active == 3)
+    {
+      lcd.print("    ");  
+      train_blink = millis();
+    }
+    else
+    {
+      lcd.print("T4: ");
+    }
+    lcd.print(train_speed[3]);
+    lcd.print(" ");
+  }
+  
   int m = 0; // mux to 32
   for(int y=0; y<2; y++) 
   {
@@ -389,73 +493,74 @@ uint8_t make_speed(bool forwards, uint8_t speed) {
 
 }
 
-
+//#define DEBUGDCC
 void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 
   Wire.beginTransmission(DCC);
-
+#ifdef DEBUGDCC
   Serial.print(" Sending: ");
-
+#endif
   Wire.write(rawcmd);
-
+#ifdef DEBUGDCC
   Serial.print(rawcmd, BIN);
 
   Serial.print(", ");
-
+#endif
   Wire.write(address);
-
+#ifdef DEBUGDCC
   Serial.print(address, BIN);
 
   Serial.print(", ");
-
+#endif
   Wire.write(dcc);
-
+#ifdef DEBUGDCC
   Serial.print(dcc, BIN);
 
   Serial.print(", ");
-
+#endif
   Wire.write(rawcmd ^ address ^ dcc);
-
+#ifdef DEBUGDCC
   Serial.println(rawcmd ^ address ^ dcc, BIN);
+#endif
 
   switch(Wire.endTransmission()) {
-
+#ifdef DEBUGDCC
     case 0: //success
 
       break;
 
     case 1:
 
-      Serial.println(" I2C send failed: too long");
+      Serial.println("too long");
 
       break;
 
     case 2:
 
-      Serial.println(" I2C send failed: address NACK");
+      Serial.println("address NACK");
 
       break;
 
     case 3:
 
-      Serial.println(" I2C send failed: data NACK");
+      Serial.println("data NACK");
 
       break;
-
+#endif
     default:
 
-      Serial.println(" I2C send failed: other");
+      Serial.println("other");
 
   }
 
   uint8_t ret = Wire.requestFrom(DCC, 2);
 
   if(ret != 2) {
-
+#ifdef DEBUGDCC
       Serial.print(" I2C didn't reply with two status bytes, bytes read:");
 
       Serial.println(ret);
-
+#endif
   } else {
 
     uint8_t a = Wire.read();
@@ -463,7 +568,7 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
     uint8_t b = Wire.read();    
 
     if(a != (    uint8_t)~b) {
-
+#ifdef DEBUGDCC
       Serial.print(" Slave reply failed checksum:");
 
       Serial.print(a);
@@ -471,9 +576,9 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
       Serial.print("!=");
 
       Serial.println((uint8_t)~b);
-
+#endif
     } else {
-
+#ifdef DEBUGDCC
       switch(a) {
 
         case 0:
@@ -505,7 +610,7 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
           Serial.println(" Other Error.");
 
       }
-
+#endif
     }
 
   }
