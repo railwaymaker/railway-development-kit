@@ -1,7 +1,5 @@
 /*
- * DCC over I2C
- *
- * Send DCC packets to Proxy via I2C
+ * Railway Development Kit
  *
  * © 2014 b@Zi.iS, Gary Fletcher
  *
@@ -49,6 +47,7 @@ Adafruit_PWMServoDriver pwm1 = Adafruit_PWMServoDriver(0x41);
 #define SERVOMAX  600 // this is the 'maximum' pulse length count (out of 4096)
 
 
+
 IRrecv irrecv(12);
 decode_results results;
 
@@ -74,6 +73,7 @@ typedef struct
     byte              outputIO = 0;                // > 0 Mux output pin to drive, < 0 servo to toggle
     byte              servoMin = 0;              // 
     byte              servoMax = 0;              // 
+    byte              ws2812id = 0;
     //bool              servoSweep = 0;            // if the servo should constantly sweep
     // Seconds to leave output on for.  
     // -1 = input button, 0 means don't auto off, > 0 is a toggle switch, < -1 is a on for once period
@@ -175,6 +175,10 @@ byte train_active = 0;
 byte train_addresses[4] = {3,1,3,1};
 byte train_speed[4] = {0,0,0,0};
 bool train_direction[4] = {true,true,true,true};
+byte occupiedOnColour[3] = {0,255,0};
+byte occupiedOffColour[3] = {255,0,0};
+byte occupiedTimeoutColour[3] = {255,255,0};
+byte occupiedTimeoutSeconds = 3;
 
 void loop() {
   
@@ -187,13 +191,13 @@ void loop() {
 
     if(results.value == 0x677A7AF6)
     {
-      Serial.println("f");
+      //Serial.println("f");
       train_direction[train_active] = false;
       set_train(0, train_addresses[train_active], train_direction[train_active],  train_speed[train_active]);
     }
     if(results.value == 0x5C0436C)
     {
-      Serial.println("b");
+      //Serial.println("b");
       train_direction[train_active] = true;
       set_train(0, train_addresses[train_active], train_direction[train_active],  train_speed[train_active]);
     }
@@ -208,9 +212,9 @@ void loop() {
     else if(results.value == 0xD2103958)
     {
       //Serial.println("down");
-      train_speed[train_active] = train_speed[train_active] - 1;
-      if(train_speed[train_active] <= 0)
-        train_speed[train_active] = 0;
+      if(train_speed[train_active] - 1 >= 0)
+        train_speed[train_active] = train_speed[train_active] - 1;
+      //train_speed[train_active] = constrain(train_speed[train_active], 0, 33);
       
       set_train(0, train_addresses[train_active], train_direction[train_active], 7);
     } 
@@ -222,7 +226,7 @@ void loop() {
     else if(results.value == 0x80A2721E) // 80A2721E 64370950
 
     {
-      Serial.println("m");
+      //Serial.println("m");
       train_speed[train_active] = 0;
       set_train(0, 3, train_direction[train_active],  train_speed[train_active]);
       //set_train(0, 3, true, 0);
@@ -276,12 +280,11 @@ void setMux()
     
   }
   else
-  {
+  {    
     lcd.setCursor(0, 0);
     if( (millis() > (train_blink + 1000) ) && train_active == 0)
     {
       lcd.print("    ");  
-      train_blink = millis();
     }
     else
     {
@@ -294,7 +297,6 @@ void setMux()
     if( (millis() > (train_blink + 1000) ) && train_active == 1)
     {
       lcd.print("    ");  
-      train_blink = millis();
     }
     else
     {
@@ -307,7 +309,6 @@ void setMux()
     if( (millis() > (train_blink + 1000) ) && train_active == 2)
     {
       lcd.print("    ");  
-      train_blink = millis();
     }
     else
     {
@@ -320,7 +321,6 @@ void setMux()
     if( (millis() > (train_blink + 1000) ) && train_active == 3)
     {
       lcd.print("    ");  
-      train_blink = millis();
     }
     else
     {
@@ -328,6 +328,9 @@ void setMux()
     }
     lcd.print(train_speed[3]);
     lcd.print(" ");
+    
+    if( millis() > (train_blink + 1500) )
+      train_blink = millis();  
   }
   
   int m = 0; // mux to 32
@@ -358,8 +361,28 @@ void setMux()
           mcp[y].pullUp(x, HIGH);
           muxIOConfig[m].onMilli = 1; // Initialised = not zero!
         }
-        // MOVE SERVO TO POS
         
+        // CHANGE WS2812 COLOUR
+        if(muxIOConfig[m].ws2812id > 0 && mcp[y].digitalRead(x)   && (muxIOConfig[m].onMilli == 0 || millis() > (muxIOConfig[m].onMilli + (occupiedTimeoutSeconds * 1000)) ) )
+        {
+          strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedOnColour[0], occupiedOnColour[1], occupiedOnColour[2]) );
+          strip.show();
+        }
+        
+        if(muxIOConfig[m].ws2812id > 0 && mcp[y].digitalRead(x)   && (muxIOConfig[m].onMilli == 0 || millis() > (muxIOConfig[m].onMilli + ((occupiedTimeoutSeconds * 1000)*2) ) ) )
+        {
+          strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedTimeoutColour[0], occupiedTimeoutColour[1], occupiedTimeoutColour[2]) );
+          strip.show();
+        }
+                
+        if(muxIOConfig[m].ws2812id > 0 && !mcp[y].digitalRead(x) )
+        {
+          strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedOffColour[0], occupiedOffColour[1], occupiedOffColour[2]) );
+          strip.show();
+          muxIOConfig[m].onMilli = millis();
+        }
+        
+        // MOVE SERVO TO POS
         if(muxIOConfig[m].outputIO > 32)
         {
           #ifdef DEBUGSERVOTOGGLE
@@ -380,6 +403,10 @@ void setMux()
           }
           
         }
+        
+        //////////////////////////////////////////////
+        // CUSTOM 
+        //////////////////////////////////////////////
         
         
       }
@@ -716,6 +743,14 @@ void getSDline() {
        
           if(m<32) 
           {
+            
+            if(memcmp(buffer, "ws", 2) == 0)
+            {
+              #ifdef DEBUGLOADCONFIG
+                Serial.print("ws");
+              #endif
+              muxIOConfig[m].ws2812id = v;
+            }
             if(memcmp(buffer, "state", 5) == 0)
             {
               #ifdef DEBUGLOADCONFIG

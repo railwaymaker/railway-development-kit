@@ -8,6 +8,7 @@ sec01 = 0
 min01 = 0
 max01 = 90
 sweep01 = 0
+ws01 = 0
 
 state02 = 0
 out02 = 0
@@ -15,6 +16,7 @@ sec02 = 0
 min02 = 0
 max02 = 90
 sweep02 = 0
+ws02 = 0
 
 state03 = 0
 out03 = 0
@@ -22,6 +24,7 @@ sec03 = 0
 min03 = 0
 max03 = 90
 sweep03 = 0
+ws03 = 0
 
 state04 = 0
 out04 = 0
@@ -29,6 +32,7 @@ sec04 = 0
 min04 = 0
 max04 = 90
 sweep04 = 0
+ws04 = 0
 
 state05 = 0
 out05 = 0
@@ -36,6 +40,7 @@ sec05 = 0
 min05 = 0
 max05 = 90
 sweep05 = 0
+ws05 = 0
 
 state06 = 0
 out06 = 0
@@ -43,6 +48,7 @@ sec06 = 0
 min06 = 0
 max06 = 90
 sweep06 = 0
+ws06 = 0
 
 state07 = 0
 out07 = 0
@@ -50,6 +56,7 @@ sec07 = 0
 min07 = 0
 max07 = 90
 sweep07 = 0
+ws07 = 0
 
 state08 = 0
 out08 = 0
@@ -57,6 +64,7 @@ sec08 = 0
 min08 = 0
 max08 = 90
 sweep08 = 0
+ws08 = 0
 
 state09 = 0
 out09 = 0
@@ -64,6 +72,7 @@ sec09 = 0
 min09 = 0
 max09 = 90
 sweep09 = 0
+ws09 = 0
 
 state10 = 0
 out10 = 0
@@ -71,6 +80,7 @@ sec10 = 0
 min10 = 0
 max10 = 90
 sweep10 = 0
+ws10 = 0
 
 state11 = 0
 out11 = 0
@@ -78,6 +88,7 @@ sec11 = 0
 min11 = 0
 max11 = 90
 sweep11 = 0
+ws11 = 0
 
 state12 = 0
 out12 = 0
@@ -85,6 +96,7 @@ sec12 = 0
 min12 = 0
 max12 = 90
 sweep12 = 0
+ws12 = 0
 
 state13 = 0
 out13 = 0
@@ -92,6 +104,7 @@ sec13 = 0
 min13 = 0
 max13 = 90
 sweep13 = 0
+ws13 = 0
 
 state14 = 0
 out14 = 0
@@ -99,6 +112,7 @@ sec14 = 0
 min14 = 0
 max14 = 90
 sweep14 = 0
+ws14 = 0
 
 state15 = 0
 out15 = 0
@@ -106,13 +120,15 @@ sec15 = 0
 min15 = 0
 max15 = 90
 sweep15 = 0
+ws15 = 0
 
 state16 = 0
-out16 = 1
-sec16 = 0
+out16 = 0
+sec16 = -1
 min16 = 0
 max16 = 90
 sweep16 = 0
+ws16 = 0
 
 state17 = 0
 out17 = 1
@@ -120,34 +136,39 @@ sec17 = -1
 min17 = 0
 max17 = 90
 sweep17 = 0
+ws17 = 1
 
 state18 = 0
 out18 = 0
-sec18 = 0
+sec18 = -1
 min18 = 0
 max18 = 90
 sweep18 = 0
+ws18 = 2
 
-state19 = 1
+state19 = 0
 out19 = 0
-sec19 = 0
+sec19 = -1
 min19 = 0
 max19 = 90
 sweep19 = 0
+ws19 = 3
 
-state20 = 1
-out20 = 49
+state20 = 0
+out20 = 0
 sec20 = -1
 min20 = 0
 max20 = 90
 sweep20 = 0
+ws20 = 4
 
 state21 = 1
-out21 = 0
-sec21 = 0
+out21 = 49
+sec21 = -1
 min21 = 0
 max21 = 90
 sweep21 = 0
+ws21 = 0
 
 state22 = 0
 out22 = 0
@@ -155,6 +176,7 @@ sec22 = 0
 min22 = 0
 max22 = 90
 sweep22 = 0
+ws22 = 0
 
 state23 = 0
 out23 = 0
@@ -162,6 +184,7 @@ sec23 = 0
 min23 = 0
 max23 = 90
 sweep23 = 0
+ws23 = 0
 
 state24 = 0
 out24 = 0
@@ -169,6 +192,7 @@ sec24 = 0
 min24 = 0
 max24 = 90
 sweep24 = 0
+ws24 = 0
 
 state25 = 0
 out25 = 0
@@ -176,6 +200,7 @@ sec25 = 0
 min25 = 0
 max25 = 90
 sweep25 = 0
+ws25 = 0
 
 state26 = 0
 out26 = 0
@@ -183,6 +208,7 @@ sec26 = 0
 min26 = 0
 max26 = 90
 sweep26 = 0
+ws26 = 0
 
 state27 = 0
 out27 = 0
@@ -190,6 +216,7 @@ sec27 = 0
 min27 = 0
 max27 = 90
 sweep27 = 0
+ws27 = 0
 
 state28 = 0
 out28 = 0
@@ -197,13 +224,15 @@ sec28 = 0
 min28 = 0
 max28 = 90
 sweep28 = 0
+ws28 = 0
 
 state29 = 1
 out29 = 18
-sec29 = 3
+sec29 = 12
 min29 = 0
 max29 = 90
 sweep29 = 0
+ws29 = 0
 
 state30 = 1
 out30 = 0
@@ -211,13 +240,15 @@ sec30 = 4
 min30 = 0
 max30 = 90
 sweep30 = 0
+ws30 = 0
 
 state31 = 1
 out31 = 17
-sec31 = 2
+sec31 = 6
 min31 = 0
 max31 = 90
 sweep31 = 0
+ws31 = 0
 
 state32 = 0
 out32 = 16
@@ -225,4 +256,4 @@ sec32 = 0
 min32 = 0
 max32 = 90
 sweep32 = 0
-
+ws32 = 0
