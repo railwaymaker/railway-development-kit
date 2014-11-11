@@ -518,7 +518,7 @@ uint8_t make_speed(bool forwards, uint8_t speed) {
 
 }
 
-#define DEBUGDCC
+//#define DEBUGDCC
 void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 
   Wire.beginTransmission(DCC);
