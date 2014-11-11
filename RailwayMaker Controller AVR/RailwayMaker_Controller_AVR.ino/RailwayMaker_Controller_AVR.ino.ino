@@ -173,7 +173,7 @@ void setup() {
 
 byte train_active = 0;
 byte train_addresses[4] = {3,1,3,1};
-byte train_speed[4] = {0,0,0,0};
+byte train_speed[4] = {6,6,6,6};
 bool train_direction[4] = {true,true,true,true};
 byte occupiedOnColour[3] = {0,255,0};
 byte occupiedOffColour[3] = {255,0,0};
@@ -368,14 +368,12 @@ void setMux()
           strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedOnColour[0], occupiedOnColour[1], occupiedOnColour[2]) );
           strip.show();
         }
-        
-        if(muxIOConfig[m].ws2812id > 0 && mcp[y].digitalRead(x)   && (muxIOConfig[m].onMilli == 0 || millis() > (muxIOConfig[m].onMilli + ((occupiedTimeoutSeconds * 1000)*2) ) ) )
-        {
-          strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedTimeoutColour[0], occupiedTimeoutColour[1], occupiedTimeoutColour[2]) );
-          strip.show();
-        }
-                
-        if(muxIOConfig[m].ws2812id > 0 && !mcp[y].digitalRead(x) )
+        //else if(muxIOConfig[m].ws2812id > 0 && mcp[y].digitalRead(x)   && millis() > (muxIOConfig[m].onMilli + ((occupiedTimeoutSeconds * 1000)*2)) ) 
+        //{
+        //  strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedTimeoutColour[0], occupiedTimeoutColour[1], occupiedTimeoutColour[2]) );
+        //  strip.show();
+        //}        
+        else if(muxIOConfig[m].ws2812id > 0 && !mcp[y].digitalRead(x) )
         {
           strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedOffColour[0], occupiedOffColour[1], occupiedOffColour[2]) );
           strip.show();
@@ -520,12 +518,12 @@ uint8_t make_speed(bool forwards, uint8_t speed) {
 
 }
 
-//#define DEBUGDCC
+#define DEBUGDCC
 void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 
   Wire.beginTransmission(DCC);
 #ifdef DEBUGDCC
-  Serial.print(" Sending: ");
+  Serial.print("Sending: ");
 #endif
   Wire.write(rawcmd);
 #ifdef DEBUGDCC
@@ -584,10 +582,11 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
 
   if(ret != 2) {
 #ifdef DEBUGDCC
-      Serial.print(" I2C didn't reply with two status bytes, bytes read:");
+      Serial.print("I2C no reply with 2 bytes:");
 
       Serial.println(ret);
 #endif
+    send(rawcmd, address, dcc); // try again...
   } else {
 
     uint8_t a = Wire.read();
