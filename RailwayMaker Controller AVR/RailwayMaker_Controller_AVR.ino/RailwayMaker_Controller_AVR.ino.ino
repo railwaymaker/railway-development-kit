@@ -23,7 +23,8 @@
 #include <Adafruit_MCP23017.h>
 #include <Adafruit_PWMServoDriver.h>
 
-
+const bool FORWARD = true;
+const bool BACKWARD = false;
 const uint8_t chipSelect = 8;
 SdFat sd;
 
@@ -150,7 +151,7 @@ void setup() {
   pwm1.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
   //pwm2.begin();
   //pwm2.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
-
+/*
   for (uint16_t pulselen = SERVOMIN; pulselen < SERVOMAX; pulselen++) {
     pwm1.setPWM(1, 0, pulselen);
   }
@@ -158,14 +159,15 @@ void setup() {
   for (uint16_t pulselen = SERVOMAX; pulselen > SERVOMIN; pulselen--) {
     pwm1.setPWM(1, 0, pulselen);
   }
-  delay(500);  
+*/
+  //delay(500);  
+  //pwm1.setPWM(1, 0, 550);
   
   // save I2C bitrate
   uint8_t twbrbackup = TWBR;
   // must be changed after calling Wire.begin() (inside pwm.begin())
   TWBR = 12; // upgrade to 400KHz!
   
-
 
   set_train(0, 3, true, 0);
   
@@ -179,6 +181,8 @@ byte occupiedOnColour[3] = {0,255,0};
 byte occupiedOffColour[3] = {255,0,0};
 byte occupiedTimeoutColour[3] = {255,255,0};
 byte occupiedTimeoutSeconds = 3;
+
+bool SERVO_CONFIG = false;
 
 void loop() {
   
@@ -214,8 +218,6 @@ void loop() {
       //Serial.println("down");
       if(train_speed[train_active] - 1 >= 0)
         train_speed[train_active] = train_speed[train_active] - 1;
-      //train_speed[train_active] = constrain(train_speed[train_active], 0, 33);
-      
       set_train(0, train_addresses[train_active], train_direction[train_active], 7);
     } 
     else if(results.value == 0x9F5D3A9A) // 9F5D3A9A 64370950
@@ -242,20 +244,46 @@ void loop() {
     }
     irrecv.resume(); // Receive the next value
   }
-
-  muxStatus();
-  setMux();
-}
-
-//#define DEBUGSERVOTOGGLE
-
-unsigned long train_blink = 0;
-void setMux()
-{
-  //lcd.clear();
-  
-  if( HWB )
+/*
+  byte YellowJoystickValue =  analogRead(A0);
+  Serial.println(YellowJoystickValue);
+  if(YellowJoystickValue > 100 && YellowJoystickValue < 200) // UP
   {
+    train_speed[train_active] = train_speed[train_active] + 1;
+    if(train_speed[train_active] >= 33)
+      train_speed[train_active] = 33;
+    set_train(0, train_addresses[train_active], train_direction[train_active],  train_speed[train_active]);
+  }
+  if(YellowJoystickValue > 50 && YellowJoystickValue < 100) // DOWN
+  {
+    if(train_speed[train_active] - 1 >= 0)
+      train_speed[train_active] = train_speed[train_active] - 1;
+    set_train(0, train_addresses[train_active], train_direction[train_active], 7);
+  }
+  if(YellowJoystickValue == 0) // LEFT
+  {
+    train_direction[train_active] = false;
+    set_train(0, train_addresses[train_active], train_direction[train_active],  train_speed[train_active]);
+  }
+  if(YellowJoystickValue > 15 && YellowJoystickValue < 30) // RIGHT
+  {
+    train_direction[train_active] = true;
+    set_train(0, train_addresses[train_active], train_direction[train_active],  train_speed[train_active]);
+  }
+  if(YellowJoystickValue > 10 && YellowJoystickValue < 15) // MENU
+  {
+    train_active = train_active +1;
+    if(train_active > 3)
+      train_active = 0;  
+  }
+*/
+  if( HWB ) 
+  {
+    SERVO_CONFIG = !SERVO_CONFIG;
+  }
+  if(SERVO_CONFIG)
+  {
+    lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Servo: "); 
 
@@ -276,62 +304,71 @@ void setMux()
     lcd.print( sensorValue );  
     Serial.print(sensorValue);
     delay(500);
-    
-    
   }
   else
-  {    
-    lcd.setCursor(0, 0);
-    if( (millis() > (train_blink + 1000) ) && train_active == 0)
-    {
-      lcd.print("    ");  
-    }
-    else
-    {
-      lcd.print("T1: ");
-    }
-    lcd.print(train_speed[0]);
-    lcd.print(" ");
-    
-    lcd.setCursor(10, 0);
-    if( (millis() > (train_blink + 1000) ) && train_active == 1)
-    {
-      lcd.print("    ");  
-    }
-    else
-    {
-      lcd.print("T2: ");
-    }
-    lcd.print(train_speed[1]);
-    lcd.print(" ");
-    
-    lcd.setCursor(0, 1);
-    if( (millis() > (train_blink + 1000) ) && train_active == 2)
-    {
-      lcd.print("    ");  
-    }
-    else
-    {
-      lcd.print("T3: ");
-    }
-    lcd.print(train_speed[2]);
-    lcd.print(" ");
-    
-    lcd.setCursor(10, 1);
-    if( (millis() > (train_blink + 1000) ) && train_active == 3)
-    {
-      lcd.print("    ");  
-    }
-    else
-    {
-      lcd.print("T4: ");
-    }
-    lcd.print(train_speed[3]);
-    lcd.print(" ");
-    
-    if( millis() > (train_blink + 1500) )
-      train_blink = millis();  
+  {
+    muxStatus();
+    setMux();
   }
+}
+
+//#define DEBUGSERVOTOGGLE
+
+unsigned long train_blink = 0;
+void setMux()
+{
+  //lcd.clear();
+  lcd.setCursor(0, 0);
+  if( (millis() > (train_blink + 1000) ) && train_active == 0)
+  {
+    lcd.print("    ");  
+  }
+  else
+  {
+    lcd.print("T1: ");
+  }
+  lcd.print(train_speed[0]);
+  lcd.print(" ");
+  
+  lcd.setCursor(10, 0);
+  if( (millis() > (train_blink + 1000) ) && train_active == 1)
+  {
+    lcd.print("    ");  
+  }
+  else
+  {
+    lcd.print("T2: ");
+  }
+  lcd.print(train_speed[1]);
+  lcd.print(" ");
+  
+  lcd.setCursor(0, 1);
+  if( (millis() > (train_blink + 1000) ) && train_active == 2)
+  {
+    lcd.print("    ");  
+  }
+  else
+  {
+    lcd.print("T3: ");
+  }
+  lcd.print(train_speed[2]);
+  lcd.print(" ");
+  
+  lcd.setCursor(10, 1);
+  if( (millis() > (train_blink + 1000) ) && train_active == 3)
+  {
+    lcd.print("    ");  
+  }
+  else
+  {
+    lcd.print("T4: ");
+  }
+  lcd.print(train_speed[3]);
+  lcd.print(" ");
+  
+  if( millis() > (train_blink + 1500) )
+    train_blink = millis();  
+  
   
   int m = 0; // mux to 32
   for(int y=0; y<2; y++) 
@@ -354,7 +391,7 @@ void setMux()
           //Serial.print("onmilli=");
           //Serial.println(muxIOConfig[m].onMilli);
         #endif  
-
+  
         if(muxIOConfig[m].onMilli == 0)
         {
           mcp[y].pinMode(x, INPUT);
@@ -375,6 +412,7 @@ void setMux()
         //}        
         else if(muxIOConfig[m].ws2812id > 0 && !mcp[y].digitalRead(x) )
         {
+          Serial.println(x);
           strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedOffColour[0], occupiedOffColour[1], occupiedOffColour[2]) );
           strip.show();
           muxIOConfig[m].onMilli = millis();
@@ -392,12 +430,12 @@ void setMux()
           if(mcp[y].digitalRead(x))
           {
             //Serial.println("x");
-            pwm1.setPWM(1, 0, 150);
+            //pwm1.setPWM(1, 0, 150);
           }
           else
           {
             //Serial.println("y");
-            pwm1.setPWM(1, 0, 550);
+            //pwm1.setPWM(1, 0, 550);
           }
           
         }
@@ -406,7 +444,18 @@ void setMux()
         // CUSTOM 
         //////////////////////////////////////////////
         
-        
+        if( !mcp[1].digitalRead(0) )
+        {
+          Serial.println("here");
+          set_train(0, 3, BACKWARD,  6);
+          pwm1.setPWM(1, 0, 150);
+        }
+        if( !mcp[1].digitalRead(1) )
+        {
+          Serial.println("there");
+          set_train(0, 3, FORWARD,  6);
+          pwm1.setPWM(1, 0, 550);
+        }
       }
       else // TOGGLE
       {
@@ -474,11 +523,16 @@ void muxStatus()
   }
 }
 
+long unsigned LastCommandSent = 0;
 
 void set_train(uint8_t track, uint8_t train, bool forwards, uint8_t speed) {
 
-  send(make_cmd(track, false, 1), train, make_speed(forwards, speed));
-
+  if(millis() > (LastCommandSent + 500) )
+  {
+    Serial.print("sent");
+    send(make_cmd(track, false, 1), train, make_speed(forwards, speed));
+    LastCommandSent = millis();
+  }
 }
 
 uint8_t make_cmd(uint8_t track, bool cancel, uint8_t repeat) {
@@ -548,6 +602,8 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
   Serial.println(rawcmd ^ address ^ dcc, BIN);
 #endif
 
+Wire.endTransmission();
+/*
   switch(Wire.endTransmission()) {
 #ifdef DEBUGDCC
     case 0: //success
@@ -573,8 +629,9 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
       break;
 #endif
     default:
-
-      Serial.println("other");
+      delay(60);
+      //Serial.println("other");
+      break;
 
   }
 
@@ -640,12 +697,12 @@ void send(uint8_t rawcmd, uint8_t address, uint8_t dcc) {
     }
 
   }
-
+*/
 }
 
 
 // Fill the dots one after the other with a color
-
+/*
 void colorWipe(uint32_t c, uint8_t wait) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c);
@@ -653,6 +710,7 @@ void colorWipe(uint32_t c, uint8_t wait) {
       delay(wait);
   }
 }
+*/
 /*
 void scanI2C()
 {
