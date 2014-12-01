@@ -43,7 +43,7 @@ SdFat sd;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, PIN, NEO_GRB + NEO_KHZ800);
 
 Adafruit_PWMServoDriver pwm1 = Adafruit_PWMServoDriver(0x41);
-//Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(0x70);
+Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(0x70);
 #define SERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
 #define SERVOMAX  600 // this is the 'maximum' pulse length count (out of 4096)
 
@@ -59,7 +59,7 @@ decode_results results;
 //LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // 2 Line
 LiquidCrystal_I2C lcd(0x20, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);    // 4 Line
 
-#define HWB !(PINE && (1<<2))
+#define HWB !(PINE & (1<<2))
 
 
 #define DCC 0x01
@@ -107,6 +107,7 @@ void setup() {
   lcd.print("Type serial to start");
   Serial.println("Type serial to start");
   while (Serial.read() <= 0) {}
+  Serial.println("hello");
   #endif
   
   Wire.begin();
@@ -121,9 +122,16 @@ void setup() {
 
   // initialize the SD card at SPI_HALF_SPEED to avoid bus errors with
   // breadboards.  use SPI_FULL_SPEED for better performance.
-  if (!sd.begin(chipSelect, SPI_HALF_SPEED)) sd.initErrorHalt();
-
-  // run the example
+  if (!sd.begin(chipSelect, SPI_HALF_SPEED))
+  {  
+    //sd.initErrorHalt();
+    while(true)
+    {
+      Serial.println("NO SD");
+      lcd.print("NO SD");
+    }
+  }
+  // Get SD Config
   getSDline();
   
   // IR
@@ -384,7 +392,9 @@ void setMux()
           //Serial.print("secs=");
           //Serial.println(muxIOConfig[m].durationSeconds);
         #endif  
+      ///////////////
       // BUTTON
+      ///////////////
       if(muxIOConfig[m].durationSeconds == -1)
       {
         #ifdef DEBUGSERVOTOGGLE
@@ -392,11 +402,11 @@ void setMux()
           //Serial.println(muxIOConfig[m].onMilli);
         #endif  
   
-        if(muxIOConfig[m].onMilli == 0)
+        if(muxIOConfig[m].onMilli == 0) // denotes if pull-up been set on button
         {
           mcp[y].pinMode(x, INPUT);
           mcp[y].pullUp(x, HIGH);
-          muxIOConfig[m].onMilli = 1; // Initialised = not zero!
+          muxIOConfig[m].onMilli = 1; // initialised = not zero!
         }
         
         // CHANGE WS2812 COLOUR
@@ -404,6 +414,8 @@ void setMux()
         {
           strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedOnColour[0], occupiedOnColour[1], occupiedOnColour[2]) );
           strip.show();
+          Serial.print("O");
+          Serial.println(m);
         }
         //else if(muxIOConfig[m].ws2812id > 0 && mcp[y].digitalRead(x)   && millis() > (muxIOConfig[m].onMilli + ((occupiedTimeoutSeconds * 1000)*2)) ) 
         //{
@@ -412,19 +424,23 @@ void setMux()
         //}        
         else if(muxIOConfig[m].ws2812id > 0 && !mcp[y].digitalRead(x) )
         {
-          Serial.println(x);
           strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedOffColour[0], occupiedOffColour[1], occupiedOffColour[2]) );
           strip.show();
           muxIOConfig[m].onMilli = millis();
+
+          Serial.print("N");
+          Serial.println(m*y);        
         }
         
+        ////////////////////////
         // MOVE SERVO TO POS
+        ////////////////////////
         if(muxIOConfig[m].outputIO > 32)
         {
           #ifdef DEBUGSERVOTOGGLE
-            Serial.print("i="); // mux in
-            Serial.println(m+1); // add one when displaying - zero index
-            Serial.print("s="); // servo out
+            Serial.print("i=");     // mux in
+            Serial.println(m+1);    // add one when displaying - zero index
+            Serial.print("s=");     // servo out
             Serial.println(muxIOConfig[m].outputIO-32);
           #endif               
           if(mcp[y].digitalRead(x))
@@ -441,18 +457,15 @@ void setMux()
         }
         
         //////////////////////////////////////////////
-        // CUSTOM 
+        // CUSTOM CODE
         //////////////////////////////////////////////
-        
         if( !mcp[1].digitalRead(0) )
         {
-          Serial.println("here");
           set_train(0, 3, BACKWARD,  6);
           pwm1.setPWM(1, 0, 150);
         }
         if( !mcp[1].digitalRead(1) )
         {
-          Serial.println("there");
           set_train(0, 3, FORWARD,  6);
           pwm1.setPWM(1, 0, 550);
         }
@@ -462,37 +475,27 @@ void setMux()
           mcp[y].pinMode(x, OUTPUT);
           
           // DOES NOT toggle && not initialised 
+          // These chips for some reason forget thier program state so set them perodically
           if(muxIOConfig[m].durationSeconds == 0) 
           {
-            if(muxIOConfig[m].defaultState)
-            {
-              mcp[y].digitalWrite(x, HIGH);
-            }
-            else
-            {
-              mcp[y].digitalWrite(x, LOW);
-            }
+            mcp[y].digitalWrite(x, muxIOConfig[m].defaultState);
           }
           else
           {
             mcp[y].digitalWrite(x, mcp[y].digitalRead(x));
           }
+          
+          
           // DOES toggle && not initialised 
           if(muxIOConfig[m].durationSeconds > 0) 
           {            
-            
-            //Serial.println(m);
-            //Serial.println(muxIOConfig[m].onMilli);
-            
             if(muxIOConfig[m].onMilli == 0) // initilise
             {
-              //Serial.println("i");
               muxIOConfig[m].onMilli = 1; // not zero
               muxIOConfig[m].currentState = (muxIOConfig[m].defaultState ? LOW : HIGH);
             }
             else if(millis() > (muxIOConfig[m].onMilli+(muxIOConfig[m].durationSeconds*1000))) // Expired
             {
-              //Serial.println("e");
               mcp[y].digitalWrite(x, (muxIOConfig[m].currentState ? LOW : HIGH)); // toggle // (muxIOConfig[m].defaultState ? LOW : HIGH)
               muxIOConfig[m].currentState = (muxIOConfig[m].currentState ? LOW : HIGH);
               muxIOConfig[m].onMilli = millis(); // reset
@@ -503,6 +506,10 @@ void setMux()
             }
             
           }
+          
+        Serial.print("T");
+        Serial.print(m*y);
+        Serial.println(mcp[y].digitalRead(x));
       }
       m=m+1;
     }
