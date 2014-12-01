@@ -32,7 +32,7 @@ SdFat sd;
 //ArduinoOutStream cout(Serial);
 
 
-#define PIN 4 // NEOPIXEL Pin num
+#define NEOPIN 4 // NEOPIXEL Pin num
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
 // Parameter 3 = pixel type flags, add together as needed:
@@ -40,7 +40,7 @@ SdFat sd;
 //   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, NEOPIN, NEO_GRB + NEO_KHZ800);
 
 Adafruit_PWMServoDriver pwm1 = Adafruit_PWMServoDriver(0x41);
 Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(0x70);
@@ -116,8 +116,6 @@ void setup() {
   // Configure all of the SPI select pins as outputs and make SPI
   // devices inactive, otherwise the earlier init routines may fail
   // for devices which have not yet been configured.
-  //lcd.setCursor(0,0);
-  //lcd.print("Loading...");
   delay(400);  // catch Due reset problem
 
   // initialize the SD card at SPI_HALF_SPEED to avoid bus errors with
@@ -139,37 +137,13 @@ void setup() {
   
   // DEBUG
   //scanI2C();
-
   delay(200);
   lcd.clear();
-    
-  //MUX
-  //setMux();
-  
-//-------- Write characters on the display ------------------
-// NOTE: Cursor Position: (CHAR, LINE) start at 0  
-   
-  // Test Lights
-  //colorWipe(strip.Color(255, 0, 0), 50); // Red
-  //colorWipe(strip.Color(0, 255, 0), 50); // Green
-  //colorWipe(strip.Color(0, 0, 255), 15); // Blue
-  //colorWipe(strip.Color(255, 255, 51), 50); // White White ???
  
   pwm1.begin();
   pwm1.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
   //pwm2.begin();
   //pwm2.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
-/*
-  for (uint16_t pulselen = SERVOMIN; pulselen < SERVOMAX; pulselen++) {
-    pwm1.setPWM(1, 0, pulselen);
-  }
-  delay(500);
-  for (uint16_t pulselen = SERVOMAX; pulselen > SERVOMIN; pulselen--) {
-    pwm1.setPWM(1, 0, pulselen);
-  }
-*/
-  //delay(500);  
-  //pwm1.setPWM(1, 0, 550);
   
   // save I2C bitrate
   uint8_t twbrbackup = TWBR;
@@ -193,9 +167,6 @@ byte occupiedTimeoutSeconds = 3;
 bool SERVO_CONFIG = false;
 
 void loop() {
-  
-  //colorWipe(strip.Color(255, 0, 0), 1);
-  //colorWipe(strip.Color(255, 255, 0), 1);
   
   if (irrecv.decode(&results)) {
 
@@ -234,14 +205,10 @@ void loop() {
       set_train(0, train_addresses[train_active], train_direction[train_active],  0);
     }   
     else if(results.value == 0x80A2721E) // 80A2721E 64370950
-
     {
       //Serial.println("m");
       train_speed[train_active] = 0;
       set_train(0, 3, train_direction[train_active],  train_speed[train_active]);
-      //set_train(0, 3, true, 0);
-      //ir_speed = 0;
-      //set_train(0, ir_train, false, ir_speed );
     }  
     else if(results.value == 0x14A4550C) 
     {
@@ -322,7 +289,7 @@ void loop() {
 
 //#define DEBUGSERVOTOGGLE
 
-unsigned long train_blink = 0;
+unsigned long train_blink = 0; // Flashes currently selected train on LCD panel
 void setMux()
 {
   //lcd.clear();
@@ -393,9 +360,15 @@ void setMux()
           //Serial.println(muxIOConfig[m].durationSeconds);
         #endif  
       ///////////////
-      // BUTTON
+      // BUTTONS
+      // durationSeconds is an integer and sets the 
+      // default number of seconds to toggle if in TIMER 
+      // mode if it is not automatic it has negative values
+      // durationSeconds == -1 --> PUSH
+      // durationSeconds == -2 --> TOGGLE
+      // durationSeconds >   0 --> TIMED
       ///////////////
-      if(muxIOConfig[m].durationSeconds == -1)
+      if(muxIOConfig[m].durationSeconds == -1) // PUSH BUTTON
       {
         #ifdef DEBUGSERVOTOGGLE
           //Serial.print("onmilli=");
@@ -414,22 +387,12 @@ void setMux()
         {
           strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedOnColour[0], occupiedOnColour[1], occupiedOnColour[2]) );
           strip.show();
-          Serial.print("O");
-          Serial.println(m);
-        }
-        //else if(muxIOConfig[m].ws2812id > 0 && mcp[y].digitalRead(x)   && millis() > (muxIOConfig[m].onMilli + ((occupiedTimeoutSeconds * 1000)*2)) ) 
-        //{
-        //  strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedTimeoutColour[0], occupiedTimeoutColour[1], occupiedTimeoutColour[2]) );
-        //  strip.show();
-        //}        
+        }     
         else if(muxIOConfig[m].ws2812id > 0 && !mcp[y].digitalRead(x) )
         {
           strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedOffColour[0], occupiedOffColour[1], occupiedOffColour[2]) );
           strip.show();
-          muxIOConfig[m].onMilli = millis();
-
-          Serial.print("N");
-          Serial.println(m*y);        
+          muxIOConfig[m].onMilli = millis();       
         }
         
         ////////////////////////
@@ -453,26 +416,44 @@ void setMux()
             //Serial.println("y");
             //pwm1.setPWM(1, 0, 550);
           }
+        }
+
+      }
+      if(muxIOConfig[m].durationSeconds == -2) // TOGGLE BUTTON
+      {
+        mcp[y].pinMode(x, INPUT);
+        mcp[y].pullUp(x, HIGH);
+        if(mcp[y].digitalRead(x)) // Only changes when true/pressed
+        {
+          muxIOConfig[m].currentState = !muxIOConfig[m].currentState; // swap state
           
+          ////////////////////////
+          // MOVE SERVO TO POS
+          ////////////////////////
+          if(muxIOConfig[m].outputIO > 32)
+          {        
+              if(muxIOConfig[m].currentState)
+                pwm1.setPWM(1, 0, muxIOConfig[m].servoMax);
+              else
+                pwm1.setPWM(1, 0, muxIOConfig[m].servoMin);
+          }
         }
-        
-        //////////////////////////////////////////////
-        // CUSTOM CODE
-        //////////////////////////////////////////////
-        if( !mcp[1].digitalRead(0) )
+        // CHANGE WS2812 COLOUR
+        if(muxIOConfig[m].ws2812id > 0 && muxIOConfig[m].currentState   && (muxIOConfig[m].onMilli == 0 || millis() > (muxIOConfig[m].onMilli + (occupiedTimeoutSeconds * 1000)) ) )
         {
-          set_train(0, 3, BACKWARD,  6);
-          pwm1.setPWM(1, 0, 150);
-        }
-        if( !mcp[1].digitalRead(1) )
+          strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedOnColour[0], occupiedOnColour[1], occupiedOnColour[2]) );
+          strip.show();
+        }     
+        else if(muxIOConfig[m].ws2812id > 0 && !muxIOConfig[m].currentState )
         {
-          set_train(0, 3, FORWARD,  6);
-          pwm1.setPWM(1, 0, 550);
+          strip.setPixelColor(muxIOConfig[m].ws2812id, strip.Color(occupiedOffColour[0], occupiedOffColour[1], occupiedOffColour[2]) );
+          strip.show();
+          muxIOConfig[m].onMilli = millis();       
         }
       }
-      else // TOGGLE
+      else // TIMED BUTTON
       {
-          mcp[y].pinMode(x, OUTPUT);
+          mcp[y].pinMode(x, OUTPUT); // Timer Pin is a output type
           
           // DOES NOT toggle && not initialised 
           // These chips for some reason forget thier program state so set them perodically
@@ -484,7 +465,6 @@ void setMux()
           {
             mcp[y].digitalWrite(x, mcp[y].digitalRead(x));
           }
-          
           
           // DOES toggle && not initialised 
           if(muxIOConfig[m].durationSeconds > 0) 
@@ -506,14 +486,36 @@ void setMux()
             }
             
           }
-          
-        Serial.print("T");
-        Serial.print(m*y);
-        Serial.println(mcp[y].digitalRead(x));
       }
       m=m+1;
     }
   }
+          
+  //////////////////////////////////////////////
+  // CUSTOM CODE
+  // You can put custom code here to control
+  // points, trains and other io and interactive 
+  // items that do not fit the 3 button input
+  // types, reffer to the wiki for help
+  //////////////////////////////////////////////
+  
+  if( !ioPIN(16) ) // When pin 16 is OFF
+  {
+    set_train(0, 3, BACKWARD,  6);  // move the train forwards at a speed of 6
+    pwm1.setPWM(1, 0, 150);  // and the servo to its maximum value
+  }
+  if( !ioPIN(17) ) // When pin 17 is ON  
+  {
+    set_train(0, 3, FORWARD,  6); // move the train forwards at a speed of 6
+    pwm1.setPWM(1, 0, 550); // and the servo to its maximum value
+  }
+  
+  // END CUSTOM CODE
+}
+
+bool ioPIN(byte io)
+{
+  return mcp[(io < 16 ? 1 : 2)].digitalRead((io > 16 ? io-1 : io - 16));
 }
 
 void muxStatus()
