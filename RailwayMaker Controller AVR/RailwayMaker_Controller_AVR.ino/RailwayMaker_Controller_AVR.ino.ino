@@ -419,7 +419,7 @@ void setMux()
         }
 
       }
-      if(muxIOConfig[m].durationSeconds == -2) // TOGGLE BUTTON
+      else if(muxIOConfig[m].durationSeconds == -2) // TOGGLE BUTTON
       {
         mcp[y].pinMode(x, INPUT);
         mcp[y].pullUp(x, HIGH);
@@ -499,15 +499,17 @@ void setMux()
   // types, reffer to the wiki for help
   //////////////////////////////////////////////
   
-  if( !ioPIN(16) ) // When pin 16 is OFF
+  if( ioPIN(17) ) // When pin 16 is ON
   {
-    set_train(0, 3, BACKWARD,  6);  // move the train forwards at a speed of 6
-    pwm1.setPWM(1, 0, 150);  // and the servo to its maximum value
-  }
-  if( !ioPIN(17) ) // When pin 17 is ON  
-  {
-    set_train(0, 3, FORWARD,  6); // move the train forwards at a speed of 6
+    set_train(0, 3, FORWARD,  4);  // move the train forwards at a speed of 6
+    pwm1.setPWM(0, 0, 150);  // and the servo to its maximum value
     pwm1.setPWM(1, 0, 550); // and the servo to its maximum value
+  }
+  if( ioPIN(18) ) // When pin 17 is ON  
+  {
+    set_train(0, 3, BACKWARD,  4); // move the train forwards at a speed of 6
+    pwm1.setPWM(0, 0, 550); // and the servo to its maximum value
+    pwm1.setPWM(1, 0, 150);  // and the servo to its maximum value
   }
   
   // END CUSTOM CODE
@@ -515,7 +517,8 @@ void setMux()
 
 bool ioPIN(byte io)
 {
-  return mcp[(io < 16 ? 1 : 2)].digitalRead((io > 16 ? io-1 : io - 16));
+  io=io-1;
+  return !mcp[(io >= 16 ? 1 : 0 )].digitalRead(  (io >= 16 ? io-16 : io )  );
 }
 
 void muxStatus()
@@ -536,9 +539,8 @@ long unsigned LastCommandSent = 0;
 
 void set_train(uint8_t track, uint8_t train, bool forwards, uint8_t speed) {
 
-  if(millis() > (LastCommandSent + 500) )
+  if(millis() > (LastCommandSent + 550) )
   {
-    Serial.print("sent");
     send(make_cmd(track, false, 1), train, make_speed(forwards, speed));
     LastCommandSent = millis();
   }
